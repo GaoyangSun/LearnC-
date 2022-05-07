@@ -115,6 +115,16 @@ int main()
 
 
 
+浮点数(32bit)与整数最大的区别在于，浮点数在一个范围内有无穷多个，因此无法用32bit精确表达
+假设浮点数从左到右为（b31 b30 ... b1 b0） 
+第一位（b31） 为符号位（sign）
+第二到第九位（b30->b23） 为指数位（exponent）
+第十到最后以为（b22->b0） 为分数位（fraction）
+FLOAT-> (-1)^b31 * 2^（b30b29...b23)-127 * (1.b22b21...b0)
+双精度（double）可以表达64bit 计算更慢
+半精度（half-percision） 可以表达16bit 计算更快
+
+
 #include<iostream>
 #include<iomanip>
 using namespace std;
@@ -122,322 +132,15 @@ int main()
 {
 	float f1 = 1.2f;
 	float f2 = f1 * 10000000000000;
-	cout << std::fixed << std::setprecision(15) << f1 << endl;
-	cout << std::fixed << std::setprecision(15) << f2 << endl;
+	cout << std::fixed << std::setprecision(15) << f1 << endl; // 1.200000047683716
+	cout << std::fixed << std::setprecision(15) << f2 << endl; // 12000000212992.000000000000000
+	cout << "sizeof(f1): " << sizeof(f1) << endl; // sizeof(f1): 4
+	cout << "sizeof(f2): " << sizeof(f2) << endl; // sizeof(f2): 4
 	return 0;
 }
 
-
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int a = 3;
-	int b = a++;
-	int c = ++a;
-	cout << "b= " << b << endl; //3
-	cout << "c= " << c << endl; //5
-	return 0;
-}
-
-
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	float b = 17 / 5;
-	float c = 17 / 5.f;
-	cout << "b= " << b << endl; //3
-	cout << "c= " << c << endl; //3.4f
-	return 0;
-}
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int num = 10;
-	if (num == 5)
-		cout << "The number is  5" << endl;
-	else if (num < 5)
-		cout << "The number is less than 5" << endl;
-
-	else
-		cout << "The number is greater than 5." << endl;
-}
-
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	bool isPositive = true;
-	int factor = 0;
-
-	factor = isPositive ? 1 : -1;
-	// factor = ?[isPositive;1;-1]
-	// ?计算较慢，可以使用 factor = (isPositive) * 2 -1
-
-	cout << "factor is " << factor << endl;
-}
-
-
-/ logical expressions
-not -> !
-and -> &&
-or -> ||
-precedence: ! > && > ||
-
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int a = 1;
-	int b = 2;
-
-	int c = a && b; // 1 不是0的都是1
-	int d = a & b;  // 01 10 逐位& -> 00 -> 0
-	int e = a || b; // 1 
-	int f = a | b;  // 01 10 逐位| -> 11 -> 3
-
-	cout << "c = " << c << endl;
-	cout << "d = " << d << endl;
-	cout << "e = " << e << endl;
-	cout << "f = " << f << endl;
-}
-
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int num = 10;
-	while (num > 0)
-	{
-		if (num == 5)
-			break; 
-		cout << "num = " << num << endl;
-		num--;
-	}
-}
-
-
-
-// for (init / cond / iteration / statement)
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int sum = 0;
-	for (int i = 0; i < 10; i++)
-	{
-		sum += i;
-		cout << "line " << i << endl;
-	}
-	cout << "sum = " << sum << endl;
-}
-
-// goto 跳转到xx部分，多用于异常处理
-
-#include<iostream>
-using namespace std;
-
-float mysquare(float value)
-{
-	float result = 0.0f;
-
-	if (value >= 1.0f || value <= 0)
-	{
-		cerr << "Input out of range." << endl;
-		goto EXIT_ERROR;
-	}
-	result = value * value;
-	return result;
-
-EXIT_ERROR:
-	return 0.0f;
-}
-
-int main()
-{
-	float value;
-	cout << "input a float" << endl;
-	cin >> value;
-
-	float result = mysquare(value);
-
-	cout << "The square is " << result << endl;
-	return 0;
-}
-
-
-
-// switch 不是if-else的简便写法，更类似于goto
-// 每个case后面必须加break
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	unsigned char input_char = 0;
-
-	cout << "Input a char" << endl;
-	cin >> input_char;
-	while (input_char != 'q')
-	{
-		switch (input_char)
-		{
-		case 'a':
-		case 'A':
-			cout << "move left" << endl;
-			break;
-		case 'd':
-		case 'D':
-			cout << "move right" << endl;
-			break;
-		default:
-			cout << "undefined key" << endl;
-			break;
-		}
-		cin >> input_char;
-	}
-}
-
-// 数组在c++中不是对象，而是一个连续的内存块，对于数组的长度需要单独一个变量记住
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int num_array1[5] = {2};
-	int num_array2[5] = {0,1,2,3,4};
-
-	for (int idx = 0; idx < 5; idx++)
-		cout << num_array1[idx] << " ";
-	cout << endl;
-
-	for (int idx = 0; idx < 5; idx++)
-		cout << num_array2[idx] << " ";
-	cout << endl;
-
-}
-
-
-
-// vs不支持变常数组，使用g++编译可以运行
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int len = 0;
-	while (len < 10)
-	{
-		int num_array2[len]; // 变常数组无法初始化
-		cout << "len = " << len;
-		cout << ",sizeof(num_array2))=" << sizeof(num_array2) << endl;
-		// 每个整数占4个字节 因此sizeof是len的4倍
-		len++;
-	}
-
-}
-
-// c++不会进行边界检查
-
-#include<iostream>
-using namespace std;
-
-int main()
-{
-	int num_array[5];
-	for (int idx = -1; idx <= 5; idx++)
-		num_array[idx] = idx * idx;
-	for (int idx = -1; idx <= 5; idx++)
-		cout << "num_array[" << idx << "] = " << num_array[idx] << endl;
-	return 0;
-// 数组长度为5，更改了7次但可以更改成功，-1和5是数组内存前后的内存块，此时已被更改
-}
-
-#include <iostream>
-using namespace std;
-
-// 多维数组也是几块连续内存，声明时必须列数，这样才知道第二行从哪里开始
-void init_2d_array(float mat[][4], //error, arrays of unknown bound
-	size_t rows, size_t cols)
-{
-	for (int r = 0; r < rows; r++)
-		for (int c = 0; c < cols; c++)
-			mat[r][c] = r * c;
-}
-
-int main()
-{
-	int mat1[2][3] = { {11,12,13}, {14,15,16} };
-
-	int rows = 5;
-	int cols = 4;
-	//float mat2[rows][cols]; //uninitialized array
-	float mat2[rows][4]; //uninitialized array
-
-	//init_2d_array(mat2, rows, cols);
-
-	for (int r = 0; r < rows; r++)
-		for (int c = 0; c < cols; c++)
-			mat2[r][c] = r * c;
-
-
-	for (int r = 0; r < rows; r++)
-	{
-		for (int c = 0; c < cols; c++)
-			cout << mat2[r][c] << " ";
-		cout << endl;
-	}
-	return 0;
-}
-
-
-
-#include <iostream>
-using namespace std;
-
-// 在不需要修改数组的值时，可以使用const数组
-float array_sum(const float values[], size_t length)
-{
-	float sum = 0.0f;
-	for (int i = 0; i < length; i++)
-	{
-		sum += values[i];
-		//values[i] = 0; //error
-	}
-	return sum;
-}
-
-int main()
-{
-	// const float PI = 3.1415926f;
-	// PI += 1.f; // error
-	// const float values[4] = {1.1f, 2.2f, 3.3f, 4.4f};
-	// values[0] = 1.0f; // error
-
-	float values[4] = { 1.1f, 2.2f, 3.3f, 4.4f };
-	float sum = array_sum(values, 4);
-
-	cout << "sum = " << sum << endl;
-	return 0;
-}
-
+由于采样精度的不足，对一个较大的浮点数只增加一个很小的量，可能导致增量不足以到下一个采样点，加完和原来的数相同
+判断两个浮点数相等，不要用 (f1==f2), 应该用 (fabs(f1-f2) < FLT_EPSILON
 
 
 #include <iostream>
@@ -445,273 +148,109 @@ using namespace std;
 
 int main()
 {
-	char rabbit[16] = { 'P','e','t','e','r' };
-	cout << "string length: " << strlen(rabbit) << endl;
+    float f1 = 2.34E+10f;
+    float f2 = f1 + 10;
+    int i1 = 2.34E+10;
+    int i2 = i1 + 10;
 
-	for (int i = 0; i < 16; i++)
-		cout << i << ":" << rabbit[i] << endl;
+    cout << "i1 - i2 = " << i1 - i2 << endl;  // -10
+    cout << "(i1 - i2 == 0) = " << (i1 - i2 == 0) << endl; // 0
 
-	char bad_pig[9] = { 'P','e','p','p','a',' ','p','i','g' }; 
-	char good_pig[10] = { 'P','e','p','p','a',' ','p','i','g','\0'}; // \0表示字符串在此结束
-	cout << "bad pig: " << bad_pig << endl;
-	cout << "good pig: " << good_pig << endl;
-	cout << "len of bad pig: " << strlen(bad_pig) << endl; // 返回一个奇怪的数（57
-	cout << "len of good pig: " << strlen(good_pig) << endl; // 返回9(字符串长度）而不是10（数组长度）
-	
-	return 0;
-
+    cout.setf(ios_base::fixed, ios_base::floatfield); // fixed-point
+    cout << "f1 = " << f1 << endl; // 23399999488.000000
+    cout << "f2 = " << f2 << endl; // 23399999488.000000
+    cout << "f1 - f2 = " << f1 - f2 << endl; // 0.000000
+    cout << "(f1 - f2 == 0) = " << (f1 - f2 == 0) << endl; // 1
+    return 0;
 }
 
 
+inf: 指数位11111111, 分数位0
+nan: 指数位11111111, 分数位不等于0
 
 #include <iostream>
-#include <cstring>
 using namespace std;
 
 int main()
 {
-	char str1[] = "Hello, \0cpp"; // 只能用双引号
-	char str2[] = "Sbcd";
-	char result[128];
-
-	for (int i = 0; i < 16; i++)
-		cout << i << ": " << str1[i] << endl;
-
-	strcpy(result, str1);  // 拷贝 strcpy(dest, src)
-	cout << "result= " << result << endl;
-	strcat(result, str2); // 连接 strcat(dest, src)
-	cout << "result= " << result << endl;
-	cout << "len(result)" << result.length() << endl;
-
-	cout << "strcmp() = " << strcmp(str1, str2) << endl; //比较str1和str2的大小
-
-	return 0;
+    float f1 = 2.0f / 0.0f;
+    float f2 = 0.0f / 0.0f;
+    cout << f1 << endl; // inf
+    cout << f2 << endl; // nan
+    return 0;
 }
 
+0137 -> 0开头的是8进制，64 + 24 + 7 = 95
+0x5F -> 0x开头是16进制，80 + 15 = 95
 
 #include <iostream>
-#include <string>
-
 using namespace std;
+
 int main()
 {
-	std::string str1 = "Hello";
-	std::string str2 = "SUSTech";
-	std::string result = str1 + ", " + str2;
+    int a = 95;
+    int b = 0137;
+    int c = 0x5F;
+    auto d = 95u; // unsigned
+    auto e = 95l; // long
+    auto f = 95ul; // unsigned long
+    auto h = 6.03e5L; // long double
+    auto i = 6.03e5f; // float
+    auto j = 6.03e5; // double
 
-	cout << "result = " + result << endl;
+    cout << a << endl; // 95
+    cout << b << endl; // 95
+    cout << c << endl; // 95
+    cout << d << endl; // 95
+    cout << e << endl; // 95
+    cout << f << endl; // 95
+    cout << h << endl; // 603000
+    cout << i << endl; // 603000
+    cout << j << endl; // 603000
 
-	cout << "The length is " << result.length() << endl;
-
-	cout << "str1 < str2 is " << (str1 < str2) << endl;
-
-	return 0;
 }
 
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
+short最多16位，第一位是sign，后面15位是数字 2 xexp 16 -> 65536
+因此 num_short1 第一位是1 num_short2 第一位是0
+65000 - 65536 -> -536  65540 - 65536 -> 4
 
-// 结构体是包含不同类型变量的组合（list）， 但表达方式更像class
-// typedef 
-// struct _Student{
-//     char name[4];
-//     int born;
-//     bool male; 
-// } Student;
-
-struct Student {
-	char name[4];
-	int born;
-	bool male;
-};
-int main()
-{
-	Student stu = { "Yu", 2000, true }; //initialization
-	// strcpy(stu.name, "Yu");
-	// stu.born = 2000;
-	// stu.male = true;
-
-	printf("Student %s, born in %d, gender %s\n",
-		stu.name,
-		stu.born,
-		stu.male ? "male" : "female");
-
-	Student students[100];
-	students[50].born = 2002;
-
-	return 0;
-}
+unsigned char 最高是8位，最大表示255 但运算操作只有4中：int long float double
+尽管 c1+c2超出了能表示的最大范围，但是在加法运算时会强制转换成int
+因此c1+c2=256. c3（int）可以表示256， c4(unsigned char)无法表示，转成0
 
 
 #include <iostream>
 using namespace std;
 
-struct Student1 {
-	int id; // 整数4字节
-	bool male; // boolean 1字节
-	char label; // char 1字节
-	float weight; // float 4字节 
-};
-// 理论上是10个字节，但是内存到寄存器是以每4个字节一搬运，因此在label之后有两个空格，这样weight从第9个开始
-// 可以完整的占4个字节 -> id 4 male 1 label 1 空格 2 weight 4
-
-struct Student2 {
-	int id;
-	bool male;
-	float weight;
-	char label;
-};
-// 同上 id 4 male 1 空格 3 weight 4 label 1 空格 3
-
 int main()
 {
-	cout << "Size of Student1: " << sizeof(Student1) << endl; //12
-	cout << "Size of Student2: " << sizeof(Student2) << endl; //16
-	return 0;
+    int num_int1 = 9; // assigning an int value to num_int1
+    int num_int2 = 'C'; // implicit conversion
+    int num_int3 = (int)'C'; // explicit conversion, C-style
+    int num_int4 = int('C'); // explicit conversion, function style
+    int num_int5 = 2.8; //implicit conversion
+    float num_float = 2.3; // implicit conversion from double to float, may loss precision
+    short num_short1 = 65000;
+    short num_short2 = 65540;
+    float a = 17 / 5;
+    float b = 17 / 5.f; 
+    unsigned char c1 = 255;
+    unsigned char c2 = 1;
+    int c3 = c1 + c2;
+    unsigned char c4 = c1 + c2;
+    
+    cout << num_int2 << endl; // 67
+    cout << num_int5 << endl; // 2
+    cout << num_float << endl; // 2.3
+    cout << num_short1 << endl; // -536
+    cout << num_short2 << endl; // 4
+    cout << sizeof(num_short1) << endl; // 2
+    cout << a << endl; // 3
+    cout << b << endl; // 3.4
+    cout << c3 << endl; // 256
+    cout << "c4: " << +c4 << endl; // 256
+
+    return 0;
 }
 
-
-
-#include <iostream>
-using namespace std;
-
-
-// union联合体类似于结构体，区别在于所有成员共享同一个内存(?)
-union ipv4address {
-	std::uint32_t address32;
-	std::uint8_t address8[4];
-};
-
-int main()
-{
-	union ipv4address ip;
-
-	cout << "sizeof(ip) = " << sizeof(ip) << endl;
-
-	ip.address8[3] = 127;
-	ip.address8[2] = 0;
-	ip.address8[1] = 0;
-	ip.address8[0] = 1;
-
-	cout << "The address is ";
-	cout << +ip.address8[3] << ".";
-	cout << +ip.address8[2] << ".";
-	cout << +ip.address8[1] << ".";
-	cout << +ip.address8[0] << endl;
-
-	cout << std::hex;
-	cout << "in hex " << ip.address32 << endl;
-
-	return 0;
-}
-
-
-
-
-
-
-#include <iostream>
-using namespace std;
-
-typedef int myint;
-typedef unsigned char vec3b[3];
-typedef struct _rgb_struct { // name _rgb_struct can be omit
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
-}  rgb_struct;
-
-int main()
-{
-	myint num = 32;
-
-	// the following two lines are identical
-	//unsigned char color[3] = {255, 0, 255};
-	vec3b color = { 255, 0, 255 };
-	cout << hex;
-	cout << "R=" << +color[0] << ", ";
-	cout << "G=" << +color[1] << ", ";
-	cout << "B=" << +color[2] << endl;
-
-	rgb_struct rgb = { 0, 255, 128 };
-	cout << "R=" << +rgb.r << ", ";
-	cout << "G=" << +rgb.g << ", ";
-	cout << "B=" << +rgb.b << endl;
-
-	cout << sizeof(rgb.r) << endl;
-	cout << sizeof(+rgb.r) << endl; //why 4?
-
-	return 0;
-}
-
-*/
-
-
-#include <iostream>
-using namespace std;
-
-// enum 枚举类型 里面的成员都是int
-enum color { WHITE, BLACK, RED, GREEN, BLUE, YELLOW, NUM_COLORS };
-enum datatype { TYPE_INT8 = 1, TYPE_INT16 = 2, TYPE_INT32 = 4, TYPE_INT64 = 8 };
-
-struct Point {
-	enum datatype type;
-	union {
-		std::int8_t data8[3];
-		std::int16_t data16[3];
-		std::int32_t data32[3];
-		std::int64_t data64[3];
-	};
-};
-
-size_t datawidth(struct Point pt)
-{
-	return size_t(pt.type) * 3;
-}
-
-int64_t l1norm(struct Point pt)
-{
-	int64_t result = 0;
-	switch (pt.type)
-	{
-	case (TYPE_INT8):
-		result = abs(pt.data8[0]) + abs(pt.data8[1]) + abs(pt.data8[2]);
-		break;
-	case (TYPE_INT16):
-		result = abs(pt.data16[0]) + abs(pt.data16[1]) + abs(pt.data16[2]);
-		break;
-	case (TYPE_INT32):
-		result = abs(pt.data32[0]) + abs(pt.data32[1]) + abs(pt.data32[2]);
-		break;
-	case (TYPE_INT64):
-		result = abs(pt.data64[0]) + abs(pt.data64[1]) + abs(pt.data64[2]);
-		break;
-	}
-	return result;
-}
-
-int main()
-{
-	enum color pen_color = RED;
-	pen_color = color(3); //convert int to enum
-	cout << "We have " << NUM_COLORS << " pens." << endl;
-	//pen_color += 1; //error!
-	int color_index = pen_color;
-	color_index += 1;
-	cout << "color_index = " << color_index << endl;
-
-	//declaration and initialization
-	struct Point point1 = { .type = TYPE_INT8, .data8 = {-2,3,4} };
-	struct Point point2 = { .type = TYPE_INT32, .data32 = {1,-2,3} };
-
-	cout << "Data width = " << datawidth(point1) << endl;
-	cout << "Data width = " << datawidth(point2) << endl;
-
-	cout << "L1 norm = " << l1norm(point1) << endl;
-	cout << "L1 norm = " << l1norm(point2) << endl;
-
-
-	return 0;
-}

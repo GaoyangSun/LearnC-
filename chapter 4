@@ -1,0 +1,400 @@
+// 数组在c++中不是对象，而是一个连续的内存块，对于数组的长度需要单独一个变量记住
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int num_array1[5] = {2};
+	int num_array2[5] = {0,1,2,3,4};
+
+	for (int idx = 0; idx < 5; idx++)
+		cout << num_array1[idx] << " ";
+	cout << endl;
+
+	for (int idx = 0; idx < 5; idx++)
+		cout << num_array2[idx] << " ";
+	cout << endl;
+
+}
+
+
+
+// vs不支持变常数组，使用g++编译可以运行
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int len = 0;
+	while (len < 10)
+	{
+		int num_array2[len]; // 变常数组无法初始化
+		cout << "len = " << len;
+		cout << ",sizeof(num_array2))=" << sizeof(num_array2) << endl;
+		// 每个整数占4个字节 因此sizeof是len的4倍
+		len++;
+	}
+
+}
+
+// c++不会进行边界检查
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int num_array[5];
+	for (int idx = -1; idx <= 5; idx++)
+		num_array[idx] = idx * idx;
+	for (int idx = -1; idx <= 5; idx++)
+		cout << "num_array[" << idx << "] = " << num_array[idx] << endl;
+	return 0;
+// 数组长度为5，更改了7次但可以更改成功，-1和5是数组内存前后的内存块，此时已被更改
+}
+
+#include <iostream>
+using namespace std;
+
+// 多维数组也是几块连续内存，声明时必须列数，这样才知道第二行从哪里开始
+void init_2d_array(float mat[][4], //error, arrays of unknown bound
+	size_t rows, size_t cols)
+{
+	for (int r = 0; r < rows; r++)
+		for (int c = 0; c < cols; c++)
+			mat[r][c] = r * c;
+}
+
+int main()
+{
+	int mat1[2][3] = { {11,12,13}, {14,15,16} };
+
+	int rows = 5;
+	int cols = 4;
+	//float mat2[rows][cols]; //uninitialized array
+	float mat2[rows][4]; //uninitialized array
+
+	//init_2d_array(mat2, rows, cols);
+
+	for (int r = 0; r < rows; r++)
+		for (int c = 0; c < cols; c++)
+			mat2[r][c] = r * c;
+
+
+	for (int r = 0; r < rows; r++)
+	{
+		for (int c = 0; c < cols; c++)
+			cout << mat2[r][c] << " ";
+		cout << endl;
+	}
+	return 0;
+}
+
+
+
+#include <iostream>
+using namespace std;
+
+// 在不需要修改数组的值时，可以使用const数组
+float array_sum(const float values[], size_t length)
+{
+	float sum = 0.0f;
+	for (int i = 0; i < length; i++)
+	{
+		sum += values[i];
+		//values[i] = 0; //error
+	}
+	return sum;
+}
+
+int main()
+{
+	// const float PI = 3.1415926f;
+	// PI += 1.f; // error
+	// const float values[4] = {1.1f, 2.2f, 3.3f, 4.4f};
+	// values[0] = 1.0f; // error
+
+	float values[4] = { 1.1f, 2.2f, 3.3f, 4.4f };
+	float sum = array_sum(values, 4);
+
+	cout << "sum = " << sum << endl;
+	return 0;
+}
+
+
+
+#include <iostream>
+using namespace std;
+
+int main()
+{
+	char rabbit[16] = { 'P','e','t','e','r' };
+	cout << "string length: " << strlen(rabbit) << endl;
+
+	for (int i = 0; i < 16; i++)
+		cout << i << ":" << rabbit[i] << endl;
+
+	char bad_pig[9] = { 'P','e','p','p','a',' ','p','i','g' }; 
+	char good_pig[10] = { 'P','e','p','p','a',' ','p','i','g','\0'}; // \0表示字符串在此结束
+	cout << "bad pig: " << bad_pig << endl;
+	cout << "good pig: " << good_pig << endl;
+	cout << "len of bad pig: " << strlen(bad_pig) << endl; // 返回一个奇怪的数（57
+	cout << "len of good pig: " << strlen(good_pig) << endl; // 返回9(字符串长度）而不是10（数组长度）
+	
+	return 0;
+
+}
+
+
+
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+int main()
+{
+	char str1[] = "Hello, \0cpp"; // 只能用双引号
+	char str2[] = "Sbcd";
+	char result[128];
+
+	for (int i = 0; i < 16; i++)
+		cout << i << ": " << str1[i] << endl;
+
+	strcpy(result, str1);  // 拷贝 strcpy(dest, src)
+	cout << "result= " << result << endl;
+	strcat(result, str2); // 连接 strcat(dest, src)
+	cout << "result= " << result << endl;
+	cout << "len(result)" << result.length() << endl;
+
+	cout << "strcmp() = " << strcmp(str1, str2) << endl; //比较str1和str2的大小
+
+	return 0;
+}
+
+
+#include <iostream>
+#include <string>
+
+using namespace std;
+int main()
+{
+	std::string str1 = "Hello";
+	std::string str2 = "SUSTech";
+	std::string result = str1 + ", " + str2;
+
+	cout << "result = " + result << endl;
+
+	cout << "The length is " << result.length() << endl;
+
+	cout << "str1 < str2 is " << (str1 < str2) << endl;
+
+	return 0;
+}
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+// 结构体是包含不同类型变量的组合（list）， 但表达方式更像class
+// typedef 
+// struct _Student{
+//     char name[4];
+//     int born;
+//     bool male; 
+// } Student;
+
+struct Student {
+	char name[4];
+	int born;
+	bool male;
+};
+int main()
+{
+	Student stu = { "Yu", 2000, true }; //initialization
+	// strcpy(stu.name, "Yu");
+	// stu.born = 2000;
+	// stu.male = true;
+
+	printf("Student %s, born in %d, gender %s\n",
+		stu.name,
+		stu.born,
+		stu.male ? "male" : "female");
+
+	Student students[100];
+	students[50].born = 2002;
+
+	return 0;
+}
+
+
+#include <iostream>
+using namespace std;
+
+struct Student1 {
+	int id; // 整数4字节
+	bool male; // boolean 1字节
+	char label; // char 1字节
+	float weight; // float 4字节 
+};
+// 理论上是10个字节，但是内存到寄存器是以每4个字节一搬运，因此在label之后有两个空格，这样weight从第9个开始
+// 可以完整的占4个字节 -> id 4 male 1 label 1 空格 2 weight 4
+
+struct Student2 {
+	int id;
+	bool male;
+	float weight;
+	char label;
+};
+// 同上 id 4 male 1 空格 3 weight 4 label 1 空格 3
+
+int main()
+{
+	cout << "Size of Student1: " << sizeof(Student1) << endl; //12
+	cout << "Size of Student2: " << sizeof(Student2) << endl; //16
+	return 0;
+}
+
+
+
+#include <iostream>
+using namespace std;
+
+
+// union联合体类似于结构体，区别在于所有成员共享同一个内存(?)
+union ipv4address {
+	std::uint32_t address32;
+	std::uint8_t address8[4];
+};
+
+int main()
+{
+	union ipv4address ip;
+
+	cout << "sizeof(ip) = " << sizeof(ip) << endl;
+
+	ip.address8[3] = 127;
+	ip.address8[2] = 0;
+	ip.address8[1] = 0;
+	ip.address8[0] = 1;
+
+	cout << "The address is ";
+	cout << +ip.address8[3] << ".";
+	cout << +ip.address8[2] << ".";
+	cout << +ip.address8[1] << ".";
+	cout << +ip.address8[0] << endl;
+
+	cout << std::hex;
+	cout << "in hex " << ip.address32 << endl;
+
+	return 0;
+}
+
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+typedef int myint;
+typedef unsigned char vec3b[3];
+typedef struct _rgb_struct { // name _rgb_struct can be omit
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+}  rgb_struct;
+
+int main()
+{
+	myint num = 32;
+
+	// the following two lines are identical
+	//unsigned char color[3] = {255, 0, 255};
+	vec3b color = { 255, 0, 255 };
+	cout << hex;
+	cout << "R=" << +color[0] << ", ";
+	cout << "G=" << +color[1] << ", ";
+	cout << "B=" << +color[2] << endl;
+
+	rgb_struct rgb = { 0, 255, 128 };
+	cout << "R=" << +rgb.r << ", ";
+	cout << "G=" << +rgb.g << ", ";
+	cout << "B=" << +rgb.b << endl;
+
+	cout << sizeof(rgb.r) << endl;
+	cout << sizeof(+rgb.r) << endl; //why 4?
+
+	return 0;
+}
+
+*/
+
+
+#include <iostream>
+using namespace std;
+
+// enum 枚举类型 里面的成员都是int
+enum color { WHITE, BLACK, RED, GREEN, BLUE, YELLOW, NUM_COLORS };
+enum datatype { TYPE_INT8 = 1, TYPE_INT16 = 2, TYPE_INT32 = 4, TYPE_INT64 = 8 };
+
+struct Point {
+	enum datatype type;
+	union {
+		std::int8_t data8[3];
+		std::int16_t data16[3];
+		std::int32_t data32[3];
+		std::int64_t data64[3];
+	};
+};
+
+size_t datawidth(struct Point pt)
+{
+	return size_t(pt.type) * 3;
+}
+
+int64_t l1norm(struct Point pt)
+{
+	int64_t result = 0;
+	switch (pt.type)
+	{
+	case (TYPE_INT8):
+		result = abs(pt.data8[0]) + abs(pt.data8[1]) + abs(pt.data8[2]);
+		break;
+	case (TYPE_INT16):
+		result = abs(pt.data16[0]) + abs(pt.data16[1]) + abs(pt.data16[2]);
+		break;
+	case (TYPE_INT32):
+		result = abs(pt.data32[0]) + abs(pt.data32[1]) + abs(pt.data32[2]);
+		break;
+	case (TYPE_INT64):
+		result = abs(pt.data64[0]) + abs(pt.data64[1]) + abs(pt.data64[2]);
+		break;
+	}
+	return result;
+}
+
+int main()
+{
+	enum color pen_color = RED;
+	pen_color = color(3); //convert int to enum
+	cout << "We have " << NUM_COLORS << " pens." << endl;
+	//pen_color += 1; //error!
+	int color_index = pen_color;
+	color_index += 1;
+	cout << "color_index = " << color_index << endl;
+
+	//declaration and initialization
+	struct Point point1 = { .type = TYPE_INT8, .data8 = {-2,3,4} };
+	struct Point point2 = { .type = TYPE_INT32, .data32 = {1,-2,3} };
+
+	cout << "Data width = " << datawidth(point1) << endl;
+	cout << "Data width = " << datawidth(point2) << endl;
+
+	cout << "L1 norm = " << l1norm(point1) << endl;
+	cout << "L1 norm = " << l1norm(point2) << endl;
+
+
+	return 0;
+}

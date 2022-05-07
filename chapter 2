@@ -254,3 +254,15 @@ int main()
     return 0;
 }
 
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int a = 3;
+	int b = a++;
+	int c = ++a;
+	cout << "b= " << b << endl; //3
+	cout << "c= " << c << endl; //5
+	return 0;
+}

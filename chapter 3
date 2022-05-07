@@ -1,0 +1,172 @@
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int num = 10;
+	if (num == 5)
+		cout << "The number is  5" << endl;
+	else if (num < 5)
+		cout << "The number is less than 5" << endl;
+	else
+		cout << "The number is greater than 5." << endl;
+}
+
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	bool isPositive = true;
+	int factor = 0;
+
+	factor = isPositive ? 1 : -1;
+	// factor = ?[isPositive;1;-1]
+	// ?计算较慢，可以使用 factor = (isPositive) * 2 -1
+
+	cout << "factor is " << factor << endl;
+}
+
+
+/ logical expressions
+not -> !
+and -> &&
+or -> ||
+precedence: ! > && > ||
+
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int a = 1;
+	int b = 2;
+
+	int c = a && b; // 1 不是0的都是1
+	int d = a & b;  // 01 10 逐位& -> 00 -> 0
+	int e = a || b; // 1 
+	int f = a | b;  // 01 10 逐位| -> 11 -> 3
+
+	cout << "c = " << c << endl;
+	cout << "d = " << d << endl;
+	cout << "e = " << e << endl;
+	cout << "f = " << f << endl;
+}
+
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int num = 10;
+	while (num > 0)
+	{
+		if (num == 5)
+			break; 
+		cout << "num = " << num << endl;
+		num--;
+	}
+}
+
+注意 size_t是无符号的整数，当num=0时，num--下一步不是-1，而是size_t能取到的最大数，因此循环不会终止
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	size_t num = 10;
+	while (num >= 0)
+	{
+		cout << "num = " << num << endl;
+		num--;
+	}
+}
+
+
+
+// for (init / cond / iteration / statement)
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	int sum = 0;
+	for (int i = 0; i < 10; i++)
+	{
+		sum += i;
+		cout << "line " << i << endl;
+	}
+	cout << "sum = " << sum << endl;
+}
+
+// goto 跳转到xx部分，多用于异常处理
+
+#include<iostream>
+using namespace std;
+
+float mysquare(float value)
+{
+	float result = 0.0f;
+
+	if (value >= 1.0f || value <= 0)
+	{
+		cerr << "Input out of range." << endl;
+		goto EXIT_ERROR;
+	}
+	result = value * value;
+	return result;
+
+EXIT_ERROR:
+	return 0.0f;
+}
+
+int main()
+{
+	float value;
+	cout << "input a float" << endl;
+	cin >> value;
+
+	float result = mysquare(value);
+
+	cout << "The square is " << result << endl;
+	return 0;
+}
+
+
+
+// switch 不是if-else的简便写法，更类似于goto
+// 每个case后面必须加break
+
+#include<iostream>
+using namespace std;
+
+int main()
+{
+	unsigned char input_char = 0;
+
+	cout << "Input a char" << endl;
+	cin >> input_char;
+	while (input_char != 'q')
+	{
+		switch (input_char)
+		{
+		case 'a':
+		case 'A':
+			cout << "move left" << endl;
+			break;
+		case 'd':
+		case 'D':
+			cout << "move right" << endl;
+			break;
+		default:
+			cout << "undefined key" << endl;
+			break;
+		}
+		cin >> input_char;
+	}
+}
+

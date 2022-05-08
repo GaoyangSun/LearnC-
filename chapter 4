@@ -1,4 +1,5 @@
 // 数组在c++中不是对象，而是一个连续的内存块，对于数组的长度需要单独一个变量记住
+// 初始化的时候至少要对第一个元素赋值，这样后面的元素自动变0，若都不初始化，则数组内所有值为随机值
 #include<iostream>
 using namespace std;
 
@@ -17,14 +18,25 @@ int main()
 
 }
 
-
-
 // vs不支持变常数组，使用g++编译可以运行
+// array可以看做指针，因此array和&array都代表array的首地址
+// num_array3没有长度，因此可以看到他没有被分配内存，首地址和num_array1相同。
+// num_array4[9]的地址和num_array4相差2*16 + 4 = 36, 因为9*4 = 36
+
 #include<iostream>
 using namespace std;
 
 int main()
 {
+	int num_array1[10] = { 0 };
+	cout << sizeof(num_array1) << endl; // 10 * 4
+	cout << num_array1 << endl; // 0x61fecc
+
+	int num_array3[0] = {};
+	cout << sizeof(num_array3) << endl; // 0 
+	cout << &num_array3 << endl; // 0x61fecc
+	cout << num_array3 << endl; // 0x61fecc
+
 	int len = 0;
 	while (len < 10)
 	{
@@ -34,8 +46,12 @@ int main()
 		// 每个整数占4个字节 因此sizeof是len的4倍
 		len++;
 	}
-
+	int num_array4[10] = { 0 };
+	cout << num_array4 << endl; // 0x61fea4
+	cout << &num_array4[9] << endl; // 0x61fec8
 }
+
+
 
 // c++不会进行边界检查
 
@@ -45,8 +61,6 @@ using namespace std;
 int main()
 {
 	int num_array[5];
-	for (int idx = -1; idx <= 5; idx++)
-		num_array[idx] = idx * idx;
 	for (int idx = -1; idx <= 5; idx++)
 		cout << "num_array[" << idx << "] = " << num_array[idx] << endl;
 	return 0;

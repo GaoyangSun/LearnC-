@@ -67,6 +67,33 @@ int main()
 // 数组长度为5，更改了7次但可以更改成功，-1和5是数组内存前后的内存块，此时已被更改
 }
 
+/*
+#include <iostream>
+using namespace std;
+
+// 多维数组也是几块连续内存，声明时必须列数，这样才知道第二行从哪里开始
+void init_2d_array(float mat[][4], size_t rows, size_t cols)
+{
+	for (int r = 0; r < rows; r++)
+		for (int c = 0; c < rows; c++)
+			mat[r][c] = r * c;
+}
+
+
+int main()
+{
+	int rows = 5;
+	int cols = 4;
+	float mat1[rows][cols];
+
+	init_2d_array(mat1, rows, cols);
+
+	for (int r = 0; r < rows; r++)
+		for (int c = 0; c < cols; c++)
+			cout << mat1[r][c] << " ";
+		cout << endl;
+}
+*/
 #include <iostream>
 using namespace std;
 
@@ -85,14 +112,10 @@ int main()
 
 	int rows = 5;
 	int cols = 4;
-	//float mat2[rows][cols]; //uninitialized array
-	float mat2[rows][4]; //uninitialized array
 
-	//init_2d_array(mat2, rows, cols);
+	float mat2[rows][4]; // 这个地方不能写cols，只能写4（我不知道为啥）
 
-	for (int r = 0; r < rows; r++)
-		for (int c = 0; c < cols; c++)
-			mat2[r][c] = r * c;
+	init_2d_array(mat2, rows, cols);
 
 
 	for (int r = 0; r < rows; r++)
@@ -143,22 +166,25 @@ using namespace std;
 int main()
 {
 	char rabbit[16] = { 'P','e','t','e','r' };
-	cout << "string length: " << strlen(rabbit) << endl;
+	cout << "string length: " << strlen(rabbit) << endl;  // 字符串长度为5
+	cout << size(rabbit) << endl; // 数组长度为16
+
 
 	for (int i = 0; i < 16; i++)
 		cout << i << ":" << rabbit[i] << endl;
 
-	char bad_pig[9] = { 'P','e','p','p','a',' ','p','i','g' }; 
-	char good_pig[10] = { 'P','e','p','p','a',' ','p','i','g','\0'}; // \0表示字符串在此结束
-	cout << "bad pig: " << bad_pig << endl;
-	cout << "good pig: " << good_pig << endl;
+	char bad_pig[9] = { 'P','e','p','p','a',' ','p','i','g' }; // 作为数组没有问题，但作为字符串必须有结束符
+	char good_pig[10] = { 'P','e','p','p','a',' ','p','i','g','\0' }; // \0表示字符串在此结束
+	cout << "bad pig: " << bad_pig << endl; // Peppa pig烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫蘌eppa pig
+	cout << "good pig: " << good_pig << endl; // Peppa pig
 	cout << "len of bad pig: " << strlen(bad_pig) << endl; // 返回一个奇怪的数（57
+	cout << size(bad_pig) << endl; // 数组长度为9
 	cout << "len of good pig: " << strlen(good_pig) << endl; // 返回9(字符串长度）而不是10（数组长度）
-	
+	cout << size(good_pig) << endl; // 字符串长度为10
+
 	return 0;
 
 }
-
 
 
 #include <iostream>
@@ -174,7 +200,8 @@ int main()
 	for (int i = 0; i < 16; i++)
 		cout << i << ": " << str1[i] << endl;
 
-	strcpy(result, str1);  // 拷贝 strcpy(dest, src)
+	strcpy(result, str1);  // 拷贝 strcpy(dest, const src), 拷贝strlen(src)个字符串到dtest，如果strlen(dtest)<strlen(src),则会出现越界的问题
+	// strncpy(dtest, const src, count) 安全拷贝, count = min(strlen(dtest), strlen(src))
 	cout << "result= " << result << endl;
 	strcat(result, str2); // 连接 strcat(dest, src)
 	cout << "result= " << result << endl;
@@ -211,12 +238,7 @@ int main()
 #include <stdbool.h>
 
 // 结构体是包含不同类型变量的组合（list）， 但表达方式更像class
-// typedef 
-// struct _Student{
-//     char name[4];
-//     int born;
-//     bool male; 
-// } Student;
+
 
 struct Student {
 	char name[4];
@@ -225,21 +247,18 @@ struct Student {
 };
 int main()
 {
-	Student stu = { "Yu", 2000, true }; //initialization
-	// strcpy(stu.name, "Yu");
-	// stu.born = 2000;
-	// stu.male = true;
+	Student Sun = { "sun", 1992, 1};
 
-	printf("Student %s, born in %d, gender %s\n",
-		stu.name,
-		stu.born,
-		stu.male ? "male" : "female");
+	printf("name: % s, DOB : % d, sex : % s\n",
+		Sun.name, Sun.born, Sun.male ? "male" : "female");
 
-	Student students[100];
-	students[50].born = 2002;
+	Sun.born = 2002;
+	printf("name: % s, DOB : % d, sex : % s\n",
+		Sun.name, Sun.born, Sun.male ? "male" : "female");
 
 	return 0;
 }
+
 
 
 #include <iostream>
@@ -269,44 +288,149 @@ int main()
 	return 0;
 }
 
+// 判断计算机是litte-endian（x86）还是big-endian（powerPC）
+// litte-endian -> 以内存较小的位置作为结尾 对于一个int 读取方式为 p+3 p+2 p+1 p+0
+// big-endian -> 以内存较大的位置作为结尾 对于一个int 读取方式为 p+0 p+1 p+2 p+3
+#include <iostream>
+using namespace std;
+
+typedef unsigned char BYTE;
+int main()
+{
+	unsigned int num, * p;
+	p = &num;
+	num = 0; 
+	cout << sizeof(num) << endl; // 4 -> 32位的int
+	*(BYTE*)p = 10; // num的首地址赋值为10，即 p+0->10 p+1 p+2 p+3 ->0， little-endian读成 0 0 0 10
+	cout << num << endl; // 10
+	if (num == 10) 
+	{
+		printf("The endian of cpu is little\n");
+	}
+	else //num == 10 0 0 0
+	{
+		printf("The endian of cpu is big\n");
+	}
+	return 0;
+}
 
 
 #include <iostream>
 using namespace std;
 
 
-// union联合体类似于结构体，区别在于所有成员共享同一个内存(?)
+// union联合体类似于结构体，区别在于所有成员共享同一个内存
 union ipv4address {
-	std::uint32_t address32;
-	std::uint8_t address8[4];
+	std::uint32_t address32;  // 可以把address看成32位的整数
+	std::uint8_t address8[4]; // 也可以看成4个8位的整数
 };
 
 int main()
 {
 	union ipv4address ip;
+	cout << "sizeof(ip) = " << sizeof(ip) << endl; // 4
 
-	cout << "sizeof(ip) = " << sizeof(ip) << endl;
-
-	ip.address8[3] = 127;
-	ip.address8[2] = 0;
+	ip.address8[0] = 127;
 	ip.address8[1] = 0;
-	ip.address8[0] = 1;
+	ip.address8[2] = 0;
+	ip.address8[3] = 1;
 
 	cout << "The address is ";
-	cout << +ip.address8[3] << ".";
-	cout << +ip.address8[2] << ".";
+	cout << +ip.address8[0] << ".";
 	cout << +ip.address8[1] << ".";
-	cout << +ip.address8[0] << endl;
+	cout << +ip.address8[2] << ".";
+	cout << +ip.address8[3] << endl;
 
 	cout << std::hex;
-	cout << "in hex " << ip.address32 << endl;
+	cout << "in hex " << ip.address32 << endl; // 100007f little-endian 127（7f）在末尾
 
 	return 0;
 }
 
+// enum 相当于一个const array 每一个元素都是其对应位置的整数
+#include <iostream>
+using namespace std;
+
+enum color { WHITE, BLACK, RED, GREEN, BLUE, YELLOW, NUM_COLORS };
+
+int main()
+{
+	cout << BLACK << endl; // 1
+	cout << color(1) << endl; // 1
+
+	int y = int(YELLOW); // 5
+	int n = int(NUM_COLORS); // 6
+	cout << y << ";" << n << endl;
+
+	y += 1;
+	// YELLO += 1; 由于是const 不能更改
+
+	color pen_color = RED;
+	cout << pen_color << endl; // 2
+
+	return 0;
+}
+
+// 用g++编译
+#include <iostream>
+using namespace std;
+
+// 使用 元素=int i来限定元素的值
+enum datatype { TYPE_INT8 = 1, TYPE_INT16 = 2, TYPE_INT32 = 4, TYPE_INT64 = 8 };
+
+// 结构体point的两个变量，type和data
+struct Point {
+	datatype type;
+	union {
+		std::int8_t data8[3];
+		std::int16_t data16[3];
+		std::int32_t data32[3];
+		std::int64_t data64[3];
+	};
+};
+
+size_t datawidth(Point pt)
+{
+	return size_t(pt.type) * 3; // point的宽度等于整数的byte * 数量
+}
+
+int64_t l1norm(Point pt) // 求point的模
+{
+	int64_t result = 0;
+	switch (pt.type)
+	{
+	case (TYPE_INT8):
+		result = abs(pt.data8[0]) + abs(pt.data8[1]) + abs(pt.data8[2]);
+		break;
+	case (TYPE_INT16):
+		result = abs(pt.data16[0]) + abs(pt.data16[1]) + abs(pt.data16[2]);
+		break;
+	case (TYPE_INT32):
+		result = abs(pt.data32[0]) + abs(pt.data32[1]) + abs(pt.data32[2]);
+		break;
+	case (TYPE_INT64):
+		result = abs(pt.data64[0]) + abs(pt.data64[1]) + abs(pt.data64[2]);
+		break;
+	}
+	return result;
+}
+
+int main()
+{
+
+	//declaration and initialization
+	Point point1 = { .type = TYPE_INT8, .data8 = {-2,3,4} };  // 使用.属性来限定输入的值对应哪个属性
+	Point point2 = { .type = TYPE_INT32, .data32 = {1,-2,3} };
+
+	cout << "Data width = " << datawidth(point1) << endl; // 3 1*3
+	cout << "Data width = " << datawidth(point2) << endl; // 12 4*3
+
+	cout << "L1 norm = " << l1norm(point1) << endl; // 9
+	cout << "L1 norm = " << l1norm(point2) << endl; // 6
 
 
-
+	return 0;
+}
 
 
 #include <iostream>
@@ -345,70 +469,3 @@ int main()
 
 */
 
-
-#include <iostream>
-using namespace std;
-
-// enum 枚举类型 里面的成员都是int
-enum color { WHITE, BLACK, RED, GREEN, BLUE, YELLOW, NUM_COLORS };
-enum datatype { TYPE_INT8 = 1, TYPE_INT16 = 2, TYPE_INT32 = 4, TYPE_INT64 = 8 };
-
-struct Point {
-	enum datatype type;
-	union {
-		std::int8_t data8[3];
-		std::int16_t data16[3];
-		std::int32_t data32[3];
-		std::int64_t data64[3];
-	};
-};
-
-size_t datawidth(struct Point pt)
-{
-	return size_t(pt.type) * 3;
-}
-
-int64_t l1norm(struct Point pt)
-{
-	int64_t result = 0;
-	switch (pt.type)
-	{
-	case (TYPE_INT8):
-		result = abs(pt.data8[0]) + abs(pt.data8[1]) + abs(pt.data8[2]);
-		break;
-	case (TYPE_INT16):
-		result = abs(pt.data16[0]) + abs(pt.data16[1]) + abs(pt.data16[2]);
-		break;
-	case (TYPE_INT32):
-		result = abs(pt.data32[0]) + abs(pt.data32[1]) + abs(pt.data32[2]);
-		break;
-	case (TYPE_INT64):
-		result = abs(pt.data64[0]) + abs(pt.data64[1]) + abs(pt.data64[2]);
-		break;
-	}
-	return result;
-}
-
-int main()
-{
-	enum color pen_color = RED;
-	pen_color = color(3); //convert int to enum
-	cout << "We have " << NUM_COLORS << " pens." << endl;
-	//pen_color += 1; //error!
-	int color_index = pen_color;
-	color_index += 1;
-	cout << "color_index = " << color_index << endl;
-
-	//declaration and initialization
-	struct Point point1 = { .type = TYPE_INT8, .data8 = {-2,3,4} };
-	struct Point point2 = { .type = TYPE_INT32, .data32 = {1,-2,3} };
-
-	cout << "Data width = " << datawidth(point1) << endl;
-	cout << "Data width = " << datawidth(point2) << endl;
-
-	cout << "L1 norm = " << l1norm(point1) << endl;
-	cout << "L1 norm = " << l1norm(point2) << endl;
-
-
-	return 0;
-}

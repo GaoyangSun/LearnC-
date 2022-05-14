@@ -1,0 +1,310 @@
+// 指针指向的是一个内存地址，可以通过*pointer取到内容，也可以通过&取到内容的地址
+#include <iostream>
+using namespace std;
+
+int main()
+{
+	int num = 10;
+	int* p1 = NULL, * p2 = NULL;
+
+	cout << p1 << endl; // 0000000000000000
+	cout << p2 << endl; // 0000000000000000
+
+	p1 = &num;
+	p2 = &num;
+
+	cout << p1 << endl; // 0000009E3CB9F8C4
+	cout << p2 << endl; // 0000009E3CB9F8C4
+
+	*p1 = 20;
+	cout << num << endl; // 20
+
+	*p2 = 30;
+	cout << num << endl; // 30
+
+	int* p3 = NULL;
+	cout << p3 << endl; // 0000000000000000
+
+	return 0;
+	
+}
+
+
+// 通过结构体指针来修改结构体的内容
+#include <iostream>
+#include <typeinfo>
+#include <cstring>
+using namespace std;
+
+struct Student
+{
+	bool male;
+	char name[4];
+	int born;
+
+};
+
+int main()
+{
+	Student stu = { true, "Sun", 1992 };
+	Student* p1 = &stu;
+
+
+	cout << p1 << endl; // 0x61fef8
+
+	bool* p2 = &stu.male;
+	cout << p2 << endl; // 0x61fef8
+
+	// p1 p2 指向同一个地址，但是由于初始化时声明的类型不同，导致最终指向的内存长度不同
+
+	cout << sizeof(* p1) << endl; // 12
+	cout << sizeof(* p2) << endl; // 1
+	cout << sizeof(p1) << endl; // 4 32位地址 内存最大使用2^32->4G
+
+
+	int* p3 = &stu.born;
+	cout << p3 << endl; // 0x61ff00
+
+	cout << &stu.name << endl; // 0x61fef9
+	cout << &((*p1).name) << endl; // 0x61fef9
+	cout << &p1->name << endl; // 0x61fef9
+
+
+
+	char p5[4];
+	strcpy(p5, stu.name);
+	// you cannot use char p2[4] = stu.name 来赋值
+	cout << p5 << endl; // Sun
+
+
+	strcpy(p1->name, "Shu");
+	p1->born = 1993;
+	(*p1).male = false;
+
+	cout << p1->name << ";" << p1->born << ";" << (*p1).male << endl;
+
+	return 0;
+
+}
+
+// 指针的指针
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+int main()
+{
+	int num = 10;
+	int* p1 = &num;
+	int** p2 = &p1;
+	
+
+	cout << p1 << endl;  // 00000086162FF5C4  指针p1的内容，就是num的地址 
+	cout << &p1 << endl; // 00000086162FF5E8  指针p1的地址 
+	cout << p2 << endl;  // 0000007AB78FF678  指针p2的内容，就是指针p1的地址
+	cout << &p2 << endl; // 00000086162FF608  指针p2的地址
+
+	*(*p2) = 20;
+
+	cout << num << endl; // 20
+
+	return 0;
+}
+
+
+// const修饰指针
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+int main()
+{
+	int num1 = 10;
+	int num2 = 20;
+
+	const int* p1 = &num1; // const 修饰的是指针与指向内容的关系
+	// *p1 = 30; 无法通过指针p1来修改 num1
+	num1 = 30; // 但是可以直接修改
+
+
+	int* const p2 = &num1; // const 修饰的是指针p2
+	*p2 = 40; // 可以通过指针p2来修改num1
+	// p2 = &num2; 但无法修改指针p2
+
+	const int* const p3 = &num1;
+	// *p3 = 50; 无法通过p3修改num1
+	// p3 = &num2;  也无法修改p3的地址
+
+	return 0;
+}
+
+
+// array本身就是const指针，&array就是其本身
+#include <iostream>
+using namespace std;
+
+struct Student
+{
+    char name[4];
+    int born;
+    bool male;
+};
+
+int main()
+{
+
+    Student stus[128];
+    Student* p1 = &stus[0];
+    Student* p2 = &stus[1];
+
+    printf("p1 = %p\n", p1);   // 000000049FF2F2B0
+    printf("p2 = %p\n", p2);  // 000000049FF2F2BC
+    printf("stus = %p\n", stus); // 000000049FF2F2B0 
+    printf("&stus = %p\n", &stus); // 000000049FF2F2B0  array的本身就是指针，和其指针以及其第一个元素的地址相同
+
+    Student* p = stus;
+    // Student* p0 = &stus; 无法操作
+    printf("p = %p\n", p); // 000000049FF2F2B0
+
+    cout << sizeof(stus) << endl;  // 1536 stus的位数是 12 * 128
+    cout << sizeof(&stus) << endl; // 8 地址的位数是8
+    cout << sizeof(p) << endl; // 8 地址的位数是8
+    
+    return 0;
+}
+
+
+// 指针的加减移动n个元素
+#include <iostream>
+using namespace std;
+
+// 打印array的宏，由于宏必须在一行，因此用\分割，同时宏中的n和array都加括号，让宏更加安全
+#define PRINT_ARRAY(array, n) \
+for (int idx = 0; idx < (n); idx++) \
+    cout << "array[" << idx << "] = " << (array)[idx] << endl;
+
+int main()
+{
+    int numbers[4] = { 0, 1, 2, 3 };
+    PRINT_ARRAY(numbers, 4) // 此处不需要加分号，因为宏中有分号
+
+    int* p1 = numbers + 1;
+
+    printf("numbers = %p\n", numbers); // 000000E89DF3FB18
+    printf("p1 = %p\n", p1); // 000000E89DF3FB1C 8->C 移动一个元素，4个字节
+
+    *p1 = 10;
+    *(p1 - 1) = 100;
+    p1[1] = 20;
+    PRINT_ARRAY(numbers, 4); // 100 10 20 3
+
+    printf("*(p1+1) = %i\n", *(p1 + 1)); // 20
+    printf("p1[1] = %i\n", p1[1]); // 20  可以通过p1[1]的方式取到p1+1的内容
+
+    printf("(p1+1) = %p\n", (p1 + 1)); // 000000E89DF3FB20 1C->20 移动一个元素，4个字节
+    printf("&p1[1] = %p\n", &p1[1]); // 000000E89DF3FB20 
+    printf("&p1[-1] = %p\n", &p1[-1]); // 000000E89DF3FB18 1C->18 移动一个元素，4个字节 
+    return 0;
+}
+
+
+// stack栈 存储静态变量
+// heap堆 存储动态变量
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int a = 0;
+    int b = 0;
+    int c = 0;
+
+    cout << &a << endl; // 0x61fef4
+    cout << &b << endl; // 0x61fef0
+    cout << &c << endl; // 0x61feec
+    // 以g++编译的结果为准，地址越来越小，每个相差4个字节（内存到0时game over）
+
+
+    int* p1 = (int*)malloc(4);
+    int* p2 = (int*)malloc(1);
+    int* p3 = (int*)malloc(1);
+
+    cout << p1 << endl; // 0x726c70
+    cout << p2 << endl; // 0x726c80
+    cout << p3 << endl; // 0x726c90
+    // 地址越来越大，每个相差16个字节，16字节为最小分配量，方便对齐
+
+    free(p1);
+    free(p2);
+    free(p3);
+
+    return 0;
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+using namespace std;
+
+void foo()
+{
+    int* p = (int*)malloc(sizeof(int));
+    return;
+} //memory leak 局部变量的内存在返回后无法找回，无法被释放
+
+int main()
+{
+    int* p = NULL;
+
+    cout << sizeof(int) << endl; // 4
+    p = (int*)malloc(1 * sizeof(int));
+    cout << p << endl; // 0xe36c70
+    // some statements
+    p = (int*)malloc(8 * sizeof(int));
+    cout << p << endl; // 0xe36c88 两次申请的内存相差 16(最小量）
+    // some statements
+    free(p);
+    // 第一次申请的内存无法找回，无法被释放
+
+    /*
+    for (int i = 0; i < 1024; i++)
+    {
+        p = (int*)malloc(1024 * 1024 * 1024);
+    }
+    printf("End\n");
+    */
+    return 0;
+}
+
+
+#include <iostream>
+using namespace std;
+
+
+int main()
+{
+    int* p1 = new int; // 分配一个int
+    int* p2 = new int(); // new int{} 分配一个int并初始化为0
+    int* p3 = new int(5); // new int{5} 分配一个int并初始化为5
+
+    Student* ps1 = new Student; // 分配一个Student
+    Student* ps2 = new Student{ "Sun", 1992, true };
+
+    int* pa1 = new int[16]; // 分配长度为16的int array
+    int* pa2 = new int[16](); // new int[16]{} 分配长度为16的int array，并全部初始化为0
+    int* pa3 = new int[16]{ 1,2,3 }; // 分配长度为16的int array, 前三个元素为1 2 3, 剩下全部为0
+
+    Student* psa1 = new Student[16]; // 分配长度为16的student
+    Student* psa2 = new Student[16]{ {"Sun",1992,true}, {"Shu",1993,false} }; // 分配长度为16的student，前两个初始化
+
+    delete p1; // 释放p1
+
+    delete pa1; // 释放p1
+    delete[]pa2; // 释放p2
+
+    delete psa1; // 释放psa1，并调用第一个元素的destructor
+    delete[]psa2; // 释放psa2, 并调用所有元素的destructor
+
+
+    return 0;
+}

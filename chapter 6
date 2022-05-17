@@ -142,3 +142,68 @@ int main()
     cout << &num_ref << endl; // 0x61ff08 对num_ref的值改变也不会影响num_ref的地址
     return 0;
 }
+
+
+
+#include <iostream>
+using namespace std;
+
+inline int max_function(int a, int b)
+{
+    if (a > b)
+        return a;
+    else
+        return b;
+}
+
+
+//#define MAX_MACRO(a, b) a>b ? a : b
+// 宏里面的变量尽量加括号，以由于运算符优先级的问题导致结果不对
+#define MAX_MACRO(a, b) (a)>(b) ? (a) : (b) 
+
+int main()
+{
+    int num1 = 20;
+    int num2 = 30;
+    int maxv = max_function(num1, num2);
+    cout << maxv << endl; // 30
+
+    maxv = MAX_MACRO(num1, num2);
+    cout << maxv << endl; // 30
+
+    maxv = MAX_MACRO(num1++, num2++);
+    // (num1++)>(num2++) ? (num1++) : (num2++)  注意 num1++是一个表达式，其返回值时num1
+    // 1. num1++ -> num1=21 2. num2++ -> num2 = 31
+    // 3. false -> 返回num2++ -> 返回31, num2->32 
+
+    cout << maxv << endl; // 31
+    cout << "num1=" << num1 << endl; // 21
+    cout << "num2=" << num2 << endl; // 32
+
+    num1 = 20; // 不能两次初始化，int num1 = 20. 此处单纯是赋值。
+    num2 = 30;
+    maxv = max_function(num1++, num2++);
+    // 函数pass by value, 传入的值时20 和 30. 同时 num1=21 num2=31
+    // 返回30
+    cout << maxv << endl; // 30
+    cout << "num3=" << num1 << endl; // 21
+    cout << "num4=" << num2 << endl; // 31
+
+    num1 = 0xAB09; // 43785
+    num2 = 0xEF08; // 61192
+    maxv = MAX_MACRO(num1 & 0xFF, num2 & 0xFF);
+    // 16进制可以直接进行位运算 0xFF -> 111111111 -> 只考虑后面8位即可 0x09-> 1001 -> 1001 -> 9
+    // 同理 num2 & 0xFF -> 0x08 -> 8
+    cout << maxv << endl; // 9
+    cout << num1 << endl; // 43785
+    cout << num2 << endl; // 61192
+
+    num1 = 0xAB09;
+    num2 = 0xEF08;
+    maxv = max_function(num1 & 0xFF, num2 & 0xFF);
+    cout << maxv << endl; // 9
+    cout << num1 << endl; // 43785
+    cout << num2 << endl; // 61192
+
+    return 0;
+}

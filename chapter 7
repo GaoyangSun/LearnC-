@@ -1,0 +1,241 @@
+// 默认参数要放在末尾
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+float norm(float x, float y, float z);
+float norm(float x, float y, float z = 0);
+float norm(float x, float y = 0, float z); 
+// 这条不能被独立编译，由于上面函数设置z=0，这条相当于float norm(float x, float y = 0, float z=0)
+
+int main()
+{
+    cout << norm(3.0f) << endl;
+    cout << norm(3.0f, 4.0f) << endl;
+    cout << norm(3.0f, 4.0f, 5.0f) << endl;
+    return 0;
+}
+
+float norm(float x, float y, float z)
+{
+    return sqrt(x * x + y * y + z * z);
+}
+
+
+// ADL, argument-dependent lookup, 相同的函数的参数列表必须相同
+// 重载的函数在引用时不能有歧义，否则不知道调用哪个的情况就会报错
+#include <iostream>
+using namespace std;
+
+int sum(int x, int y)
+{
+    cout << "sum(int, int) is called" << endl;
+    return x + y;
+}
+
+float sum(float x, float y)
+{
+    cout << "sum(float, float) is called" << endl;
+    return x + y;
+}
+int sum(int x, int y, int z)
+{
+    cout << "sum(int, int, int) is called" << endl;
+    return x + y + z;
+}
+
+int sum(int x, float y)
+{
+    cout << "sum(int, float) is called" << endl;
+    return x + y;
+}
+
+int sum1(int x, int y)
+{
+    cout << "sum1(int, int) is called" << endl;
+    return x + y;
+}
+
+// 下面的函数无法被overload，因为只有返回的类型和第一个函数不同，这样不知道调用哪个
+// double sum(int x, int y)
+// {
+//     cout << "sum(int, int) is called" << endl;
+//     return x + y;
+// }
+
+int main()
+{
+
+    cout << "sum = " << sum(1, 2) << endl; // 3  调用第一个函数
+    cout << "sum = " << sum(1.1f, 2.2f) << endl; // 3.3f  调用第二个函数
+    cout << "sum = " << sum(1, 2, 3) << endl; // 6  调用第三个函数
+    cout << "sum = " << sum(1, 2.2f) << endl; // 3  对结果进行隐式类型转换 调用第四个函数
+    cout << "sum1 = " << sum1(1, 2.2f) << endl; // 3 对y进行隐式类型转换 调用第五个函数
+
+    //which function will be called?
+    // cout << "sum = " << sum(1, 2.2) << endl;
+
+    return 0;
+}
+
+
+// template的实例化有两种，显式和隐式
+// 在明确类型时使用明确的类型及类型转换，否则根据输入来进行隐式实例化
+// syntax: template [数据类型] [function]<返回类型>[参数类型]
+#include <iostream>
+#include <typeinfo>
+using namespace std;
+
+template<typename T>
+T sum(T x, T y)
+{
+    cout << "The input type is " << typeid(T).name() << endl;
+    return x + y;
+}
+// Explicitly instantiate
+template double sum<double>(double, double);
+
+int main()
+{
+    auto val = sum(4.1f, 5.2f); // The input type is float  隐式实例化，根据参数的类型来进行实例化
+    cout << val << endl; //   9.3
+
+    val = sum<double>(4.1f, 5.2f); // The input type is double 隐式类型转换，将float转换为double
+    cout << val << endl; //   9.3
+
+    val = sum<int>(4.1f, 5.2f); // The input type is i 隐式类型转化， 将float转化为int
+    cout << val << endl; //   9
+
+    val = sum(4.1, 5.2); // The input type is double
+    cout << val << endl;  //   9.3
+
+    return 0;
+}
+
+// template的特例化
+// syntax: template<> [数据类型] [function]<返回类型>[参数类型]
+#include <iostream>
+#include <typeinfo>
+using namespace std;
+
+template<typename T>
+T sum(T x, T y)
+{
+    cout << "The input type is " << typeid(T).name() << endl;
+    return x + y;
+}
+
+struct Point
+{
+    int x;
+    int y;
+};
+
+// Specialization for Point + Point operation
+template<>
+Point sum<Point>(Point pt1, Point pt2)
+{
+    cout << "The input type is " << typeid(pt1).name() << endl;
+    Point pt;
+    pt.x = pt1.x + pt2.x;
+    pt.y = pt1.y + pt2.y;
+    return pt;
+}
+
+
+int main()
+{
+
+    Point pt1{ 1, 2 };
+    Point pt2{ 2, 3 };
+    Point pt = sum(pt1, pt2); // The input type is struct Point
+    cout << "pt = (" << pt.x << ", " << pt.y << ")" << endl; //     pt = (3, 5)
+    return 0;
+}
+
+
+// 函数的指针和引用
+// func 和 &func都返回func的地址
+// 函数的指针func_ptr使用时，可以使用(*func_ptr)，也可以直接使用func_ptr，func_ref同理
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+float norm_l1(float x, float y); //declaration
+float norm_l2(float x, float y); //declaration
+float (*norm_ptr)(float x, float y); //norm_ptr is a function pointer
+float(&norm_ref)(float x, float y) = norm_l2; //norm_ref初始化必须指明是哪个函数的ref
+
+int main()
+{
+    cout << norm_ptr << endl; // 0000000000000000
+    cout << norm_l1 << endl; // 00007FF7A1B915DC
+    cout << &norm_l1 << endl; // 00007FF7A1B915DC
+    norm_ptr = norm_l1; //Pointer norm_ptr is pointing to norm_l1
+    cout << "L1 norm of (-3, 4) = " << norm_ptr(-3.0f, 4.0f) << endl; // 7
+    cout << norm_ptr << endl; // 00007FF7A1B915DC
+
+    cout << norm_ref << endl; // 00007FF632E915E1
+    cout << &norm_ref << endl; // 00007FF632E915E1
+    cout << "L1 norm of (-3, 4) = " << norm_ref(-3, 4) << endl; // 5
+    cout << "L1 norm of (-3, 4) = " << ( & norm_ref)(-3, 4) << endl; // 5
+    
+
+    cout << norm_l2 << endl; // 00007FF7A1B915E1
+    norm_ptr = &norm_l2; //Pointer norm_ptr is pointing to norm_l2
+    cout << "L2 norm of (-3, 4) = " << (*norm_ptr)(-3.0f, 4.0f) << endl; // 5
+    cout << norm_ptr << endl; // 00007FF7A1B915E1
+    return 0;
+}
+
+float norm_l1(float x, float y)
+{
+    return fabs(x) + fabs(y);
+}
+
+float norm_l2(float x, float y)
+{
+    return sqrt(x * x + y * y);
+}
+
+// 每次递归调用都需要压栈，会造成比较大的资源消耗
+#include <iostream>
+using namespace std;
+
+void div2(double val);
+
+int main()
+{
+    div2(32.); // call the recursive function
+    return 0;
+}
+
+void div2(double val)
+{
+
+    cout << "Entering val = " << val << endl;
+    if (val > 1.0)
+        div2(val / 2); // function calls itself
+    else
+        cout << "--------------------------" << endl;
+
+    cout << "Leaving  val = " << val << endl;
+}
+
+/*
+Entering val = 32
+Entering val = 16
+Entering val = 8
+Entering val = 4
+Entering val = 2
+Entering val = 1
+--------------------------
+Leaving  val = 1
+Leaving  val = 2
+Leaving  val = 4
+Leaving  val = 8
+Leaving  val = 16
+Leaving  val = 32
+*/
+
+

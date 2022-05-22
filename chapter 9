@@ -1,0 +1,292 @@
+// class和struct的主要区别在于class里面可以有函数
+#include <iostream>
+#include <cstring>
+
+class Student
+{
+private: // 通常成员变量使用private 不能通过obj.attr的方式直接修改
+    char name[4];
+    int born;
+    bool male;
+public: // 类里面定义的函数默认是inline
+    void setName(const char*newname) // 这里使用const char* newname 是因为strncpy_s的格式要求第二项为const char*
+    {
+        strncpy(name, newname, sizeof(name)); 
+    }
+    void setBorn(int newborn)
+    {
+        born = newborn;
+    }
+    void setGender(bool newMale);
+    void printInfo();
+};
+
+void Student::setGender(bool newMale) // 成员函数可以放在类的外面
+{
+    male = newMale;
+}
+void Student::printInfo() 
+{
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Born in " << born << std::endl;
+    std::cout << "Gender: " << (male ? "Male" : "Female") << std::endl;
+}
+
+int main()
+{
+    // Student yu{ "Yu", 1999, false };  由于没有写明constructor，所以默认的constructor是 Student(), 不接收任何参数
+    Student yu;
+    yu.printInfo();
+    yu.setName("Yu");
+    yu.setBorn(2000);
+    yu.setGender(true);
+    // yu.born = 2001; 私有成员不能直接修改
+    yu.printInfo();
+    return 0;
+}
+
+// 把以上函数放到一个文件夹的多个文件  CMakeLists.txt student.hpp student.cpp main.cpp
+CMakeLists.txt
+cmake_minimum_required(VERSION 3.12) // 最低版本要求
+
+project(persondemo) // project生成的名字
+
+ADD_EXECUTABLE(persondemo main.cpp student.cpp) // 生成的名字以及依赖文件 不需要hpp文件
+
+Student.hpp -> 只放类及外部函数的声明
+#pragma once
+
+#include <cstring>
+class Student
+{
+  private:
+    char name[4];
+    int born;
+    bool male; 
+  public:
+    void setName(const char * s)
+    {
+        strncpy(name, s, sizeof(name));
+    }
+    void setBorn(int b)
+    {
+        born = b;
+    }
+    // the declarations, the definitions are out of the class
+    void setGender(bool isMale);
+    void printInfo();
+};
+
+Student.cpp -> 外部函数的定义
+#include <iostream>
+#include "student.hpp" // include + "" 表示除了在通常include的文件里面查找（用<>的情况），还在本文件下下查找
+
+void Student::setGender(bool isMale)
+{
+    male = isMale;
+}
+void Student::printInfo()
+{
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Born in " << born << std::endl;
+    std::cout << "Gender: " << (male ? "Male" : "Female") << std::endl;
+}
+
+main.cpp -> 最终的执行文件
+#include "student.hpp" // 只用include头文件即可，不能include.cpp文件
+
+int main()
+{
+    Student yu;
+    yu.setName("Yu");
+    yu.setBorn(2000);
+    yu.setGender(true);
+    yu.printInfo();
+    return 0;
+}
+
+
+
+
+// 构造函数是类在实例化时需要的函数，一般放在public里面，如果没有写明，那么就会以默认的方式进行构造
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class Student
+{
+private:
+    char name[4];
+    int born;
+    bool male;
+public:
+    Student() // 在public里面，而且可以重载
+    {
+        name[0] = 0;
+        born = 0;
+        male = false;
+        cout << "Constructor: Person()" << endl;
+    }
+    Student(const char* initName) : born(0), male(true) // 冒号后跟默认值
+    {
+        setName(initName);
+        cout << "Constructor: Person(const char*)" << endl;
+    }
+    Student(const char* initName, int initBorn, bool isMale)
+    {
+        setName(initName);
+        born = initBorn;
+        male = isMale;
+        cout << "Constructor: Person(const char, int , bool)" << endl;
+    }
+
+    void setName(const char* s)
+    {
+        strncpy(name, s, sizeof(name));
+    }
+    void setBorn(int b)
+    {
+        born = b;
+    }
+    // the declarations, the definitions are out of the class
+    void setGender(bool isMale);
+    void printInfo();
+};
+
+void Student::setGender(bool isMale)
+{
+    male = isMale;
+}
+void Student::printInfo()
+{
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Born in " << born << std::endl;
+    std::cout << "Gender: " << (male ? "Male" : "Female") << std::endl;
+}
+
+int main()
+{
+    Student yu;    // 对应第一种构造函数
+    yu.printInfo();
+
+    Student li("li"); // 对应第二种构造函数
+    li.printInfo();
+
+    Student xue = Student("Xue", 1962, true); // 对应第三种构造函数 等价于 Student xue("Xue", 1962, true);
+    xue.printInfo();
+
+    Student* zhou = new Student("Zou", 1991, false); // 动态申请去构造, 对应第三种构造函数
+    zhou->printInfo();
+    delete zhou;
+
+    return 0;
+}
+
+// destructor 在销毁对象时调用 释放在heap里面的内存
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class Student
+{
+private:
+    char* name;
+    int born;
+    bool male;
+    const int BMI = 24; 
+    static size_t student_total; // 静态成员变量是类的特性，不绑定到某一个具体的实例
+    // inline static size_t student_total = 0; c++17标准 直接在内部初始化
+public:
+    Student()
+    {
+        student_total++; // 调用构造函数时对静态成员变量修改
+        name = new char[1024]{ 0 };
+        born = 0;
+        male = false;
+        cout << "Constructor: Person()" << endl;
+    }
+    Student(const char* initName, int initBorn, bool isMale)
+    {
+        student_total++;
+        name = new char[1024];
+        setName(initName);
+        born = initBorn;
+        male = isMale;
+        cout << "Constructor: Person(const char, int , bool)" << endl;
+    }
+    ~Student()
+    {
+        student_total--; // 调用析构函数时对静态成员变量修改
+        cout << "To destroy object: " << name << endl;
+        delete[] name;
+    }
+    
+    static size_t getTotal() { return student_total; }
+
+    void setName(const char* s)
+    {
+        strncpy(name, s, 1024);
+    }
+    void setBorn(int born)
+    {
+        this->born = born; // lhs 成员变量  rhs 参数
+    }
+    int getBorn() const  // const函数，注意const要放到最后
+    {
+        // born++; born此时无法修改
+        return born;
+    }
+    // the declarations, the definitions are out of the class
+    void setGender(bool isMale);
+    void printInfo();
+
+
+};
+
+void Student::setGender(bool isMale)
+{
+    male = isMale;
+}
+void Student::printInfo()
+{
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Born in " << born << std::endl;
+    std::cout << "Gender: " << (male ? "Male" : "Female") << std::endl;
+}
+
+size_t Student::student_total = 0; // 此时不需要再加static 因为static
+
+int main()
+{
+
+    cout << "---We have " << Student::getTotal() << " students---" << endl; // 0
+
+
+    Student* zhou = new Student("Zhou", 1991, false);
+    delete zhou; // To destroy object: Zhou   delete时调用destructor 如果不进行delete则会造成内存泄漏
+
+    {
+        Student yu;
+        yu.setName("Yu");
+    }     // To destroy object: Yu  在作用域结束后就销毁
+
+    Student xue = Student("XueQikun", 1962, true);
+
+
+    Student* class1 = new Student[3]{
+    {"Tom", 2000, true},
+    {"Bob", 2001, true},
+    {"Amy", 2002, false},
+    };
+    cout << "---We have " << Student::getTotal() << " students---" << endl; // 4
+
+    // delete class1; // To destroy object: Tom 只会调用第一个变量的destructor
+    delete []class1;   // To destroy object: Amy  To destroy object : Bob To destroy object : Tom
+
+    cout << "just before return" << endl;
+    return 0;
+    // To destroy object: XueQikun  整个main在return之后调用destructor
+
+}

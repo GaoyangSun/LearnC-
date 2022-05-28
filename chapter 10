@@ -1,0 +1,448 @@
+// 运算符重载
+#include <iostream>
+#include<string>
+
+int main()
+{
+
+	std::string s("Hello ");  // char s[7] = "Hello "; -> const char*不能适用加法，只能用strcpy等方法
+	s += "C";
+	s.operator+=(" and CPP!"); // 和+= 等价
+
+	std::cout << s << std::endl;
+	return 0;
+}
+
+
+// 补充，string的切片处理及类型转换
+#include <iostream>
+#include <string>
+#include <typeinfo>
+
+using namespace std;
+
+inline string backslice(string& str, int n)
+{
+    return str.substr(str.length() - n, str.length());
+}
+
+int main()
+{
+    string str1 = "abcd";
+
+    cout << str1 << endl;
+    cout << str1.length() << endl; // 4
+    cout << str1[1] << endl; // b
+    cout << str1[str1.length() - 1] << endl; // d
+    // cout << str1[-1] << endl;
+    cout << str1.substr(str1.length() - 2, str1.length()) << endl; // cd
+    cout << backslice(str1, 2) << endl; // cd
+
+
+    cout << typeid("1").name() << endl; // char const [2]
+    cout << stoi("1") << endl; // 1
+    cout << int("1") << endl; // -1921717204
+
+
+
+    // char chr[2]("1");
+    string str2 = "hello";
+    string str3 = str2.substr(0, 1);
+    cout << str3 << endl;
+    const char* p2 = str2.data();
+    const char* p3 = str3.data();
+    const char* p4 = (str2.substr(0, 1)).data();
+
+    cout << "p2: " << p2 << endl; // p2: hello
+    cout << "*p2: " << *p2 << endl; // *p2: h
+    cout << "p3: " << p3 << endl; // p3: h
+    cout << "p4: " << p4 << endl; // p4: 
+  
+    string str("1 hours");
+    cout << typeid(str).name() << endl; // class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >
+    cout << str[0] << " type: " << typeid(str[0]).name() << endl; // 1 type: char
+    cout << str.substr(0, 1) << " type: " << typeid(str.substr(0, 1)).name() << endl; // 1 type: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >
+    
+
+    string str_sub = str.substr(0, 1);
+    const char* p5 = str_sub.data();
+    cout << "*p5: " <<  *p5 << endl; // *p5: 1
+    cout << typeid(*p5).name() << endl; // char
+    cout << stoi(str_sub) << endl; // 1
+    cout << "p5: " << p5 << endl; // p5: 1
+    cout << typeid(p5).name() << endl; // char const * __ptr64
+    cout << stoi(p5) << endl; // 1
+
+
+
+    return 0;
+}
+
+// operator 可以被重载，使其不被限制用于基本数据类型
+// friend 函数不是成员函数，在class外定义时，不需要写 class::func
+
+#include <iostream>
+#include <string>
+#include <typeinfo>
+using namespace std;
+
+inline string backslice(string& str, int n)
+{
+    return str.substr(str.length() - n, str.length());
+}
+
+class MyTime
+{
+    int hours;
+    int minutes;
+public:
+    MyTime() : hours(0), minutes(0) {}
+    /* 上述初始化为更简单的写法
+    MyTime() {
+        hours = 0;
+        minutes = 0;
+    }
+    */
+    MyTime(int h, int m) : hours(h), minutes(m) {}
+
+    MyTime operator+(const MyTime& t) const
+        // 第一个const修饰传入 -> 不修改传入值 / 第二个const修饰函数 -> 不修改原值
+    {
+        MyTime sum; // 调用第一个构造函数
+        // cout << sum.hours << " " << sum.minutes << endl;
+
+        sum.minutes = this->minutes + t.minutes;
+        sum.hours = this->hours + t.hours;
+
+        sum.hours += sum.minutes / 60;
+        sum.minutes %= 60;
+
+        return sum;
+    }
+
+    MyTime& operator+=(const MyTime& t)
+        // 此处可以返回*this的reference，而上一个函数不能，是因为此处的对象时global，而上一个sum是local
+    {
+        this->minutes += t.minutes;
+        this->hours += t.hours;
+
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+
+        return *this;
+    }
+
+    MyTime operator+(const int m) const // 加整数
+    {
+        MyTime sum;
+        sum.minutes = this->minutes + m;
+        sum.hours = this->hours;
+
+        sum.hours += sum.minutes / 60;
+        sum.minutes %= 60;
+
+        return sum;
+    }
+
+    MyTime& operator+=(const int m) // 加整数
+    {
+        this->minutes += m;
+
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+
+        return *this;
+    }
+
+    MyTime operator+(string str) const
+    {
+        MyTime sum = *this;
+        // cout << "returning backslice(str,7): " << backslice(str, 7) << endl;
+        if (backslice(str, 7) == "hour(s)") // str格式为 n hour(s)
+            //sum.hours += int(str[0]); 不能这样进行类型转换 str[0]->char
+            sum.hours += stoi(str.substr(0, str.length()-8).c_str());
+        else if (backslice(str, 9) == "minute(s)") // str格式为 n minute(s)
+            sum.minutes += stoi(str.substr(0, str.length()-10).c_str());
+        else
+            cerr << "wrong format of time" << endl;
+
+        sum.hours += sum.minutes / 60;
+        sum.minutes %= 60;
+
+        return sum;
+    }
+
+    MyTime& operator+=(string str)
+    {
+        if (backslice(str, 7) == "hour(s)")
+            this->hours += stoi(str.substr(0, str.length() - 8).c_str());
+        else if (backslice(str, 9) == "minute(s)")
+            this->minutes += stoi(str.substr(0, str.length() - 10).c_str());
+        else 
+            cerr << "wrong format of time" << endl;
+
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+
+        return *this;
+
+    }
+
+    friend MyTime operator+(int m, const MyTime& t)
+    {
+        return t + m;
+    }
+
+    friend MyTime operator+(string str, const MyTime& t)
+    {
+        return t + str;
+    }
+
+    string getTime() const
+    {
+        return std::to_string(this->hours) + " hours and " // std::to_string把整数转为string
+            + std::to_string(this->minutes) + " minutes.";
+    }
+
+    // cout << t1.getTime()<< endl;  ->  cout << t1 <<endl;
+    // 注意 << 也是个运算符，如果需要重载，要在cout (std::ostream)中修改，而std是标准类，此时可以通过friend来修改
+
+    friend std::ostream& operator<<(std::ostream& os, const MyTime& t)
+    {
+        std::string str = std::to_string(t.hours) + " hours and "
+            + std::to_string(t.minutes) + " minutes.";
+        os << str; // 将上述字符串输入到os 
+        return os;
+    }
+    friend std::istream& operator>>(std::istream& is, MyTime& t) // 输入流也是如此
+
+    {
+        is >> t.hours >> t.minutes; // 依次读入hours minutes
+        t.hours += t.minutes / 60;
+        t.minutes %= 60;
+        return is;
+    }
+};
+
+
+int main()
+{
+    cout << std::to_string(1) << endl; // 1
+    MyTime t1(2, 40);
+    MyTime t2(1, 20);
+    cout << (t1 + t2).getTime() << endl;
+    cout << (t1 + 20).getTime() << endl; // 3 hours and 0 minutes.
+    cout << (20 + t1).getTime() << endl; // 3 hours and 0 minutes. 运用第一个friend
+    cout << t1 << endl; // 2 hours and 40 minutes. 运用第三个friend
+
+    t1 += t2; //operator
+    t1.operator+=(t2); //function
+
+    cout << t1.getTime() << endl; // 5 hours and 20 minutes.
+
+    t1 += 20;
+    t1.operator+=(20);
+
+    cout << t1.getTime() << endl; // 6 hours and 0 minutes.
+
+
+    cout << (t1 + "2 hour(s)").getTime() << endl; // 8 hours and 0 minutes.
+    cout << (t1 + "75 minute(s)").getTime() << endl; // 7 hours and 15 minutes.
+
+    t1 += "2 hour(s)";
+    t1 += "15 minute(s)";
+
+    cout << t1 << endl; // 8 hours and 15 minutes.
+    cout << "Please input two integers:" << endl;
+    cin >> t1;
+    cout << t1 << endl;
+
+    return 0;
+}
+
+
+// 用户指定的类型转换
+// MyTime t2 = 80; -> 初始化操作
+// MyTime t3; -> 初始化操作 / t3 = 80; 赋值操作
+
+#include <iostream>
+
+class MyTime
+{
+    int hours;
+    int minutes;
+public:
+    MyTime() : hours(0), minutes(0)
+    {
+        std::cout << "Constructor MyTime()" << std::endl;
+    }
+    MyTime(int m) : hours(0), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int)" << std::endl;
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+    }
+    MyTime(int h, int m) : hours(h), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int,int)" << std::endl;
+    }
+
+    //implicit conversion
+    operator int() const
+    {
+        std::cout << "operator int()" << std::endl;
+        return this->hours * 60 + this->minutes;
+    }
+    //explicit conversion
+    explicit operator float() const
+    {
+        std::cout << "explicit operator float()" << std::endl;
+        return float(this->hours * 60 + this->minutes);
+    }
+
+    MyTime& operator=(int m)
+    {
+        std::cout << "operator=(int)" << std::endl;
+        this->hours = 0;
+        this->minutes = m;
+        this->hours = this->minutes / 60;
+        this->minutes %= 60;
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const MyTime& t)
+    {
+        std::string str = std::to_string(t.hours) + " hours and "
+            + std::to_string(t.minutes) + " minutes.";
+        os << str;
+        return os;
+    }
+};
+
+int main()
+{
+    MyTime t1(1, 20); // Constructor MyTime(int,int)
+    int minutes = t1; //implicit conversion   operator int()
+    float f = float(t1); //explicit conversion.  explicit operator float()
+    std::cout << "minutes = " << minutes << std::endl; // minutes = 80
+    std::cout << "minutes = " << f << std::endl; // minutes = 80
+
+    float f1 = t1; // operator int() 先转为int 再转为float 两次隐式类型转换
+    std::cout << "minutes = " << f << std::endl; // minutes = 80
+
+    MyTime t2 = 70; // Constructor MyTime(int)
+    std::cout << "t2 is " << t2 << std::endl; 
+
+    MyTime t3; // Constructor MyTime()
+    t3 = 80; // operator=(int)
+    std::cout << "t3 is " << t3 << std::endl;
+
+    return 0;
+
+}
+
+// MyTime t2 = 80; -> 初始化操作
+// MyTime t3; -> 初始化操作 / t3 = 80; 赋值操作
+// 重载++运算符时要注意++的位置
+
+#include <iostream>
+
+class MyTime
+{
+    int hours;
+    int minutes;
+public:
+    MyTime() : hours(0), minutes(0)
+    {
+        std::cout << "Constructor MyTime()" << std::endl;
+    }
+    MyTime(int m) : hours(0), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int)" << std::endl;
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+    }
+    MyTime(int h, int m) : hours(h), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int,int)" << std::endl;
+    }
+
+    //implicit conversion
+    operator int() const
+    {
+        std::cout << "operator int()" << std::endl;
+        return this->hours * 60 + this->minutes;
+    }
+    //explicit conversion
+    explicit operator float() const
+    {
+        std::cout << "explicit operator float()" << std::endl;
+        return float(this->hours * 60 + this->minutes);
+    }
+
+    MyTime& operator=(int m)
+    {
+        std::cout << "operator=(int)" << std::endl;
+        this->hours = 0;
+        this->minutes = m;
+        this->hours = this->minutes / 60;
+        this->minutes %= 60;
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const MyTime& t)
+    {
+        std::string str = std::to_string(t.hours) + " hours and "
+            + std::to_string(t.minutes) + " minutes.";
+        os << str;
+        return os;
+    }
+
+    // ++MyTime -> 先加再赋值
+    MyTime& operator++()
+    {
+        this->minutes++;
+        this->hours += this->minutes / 60;
+        this->minutes = this->minutes % 60;
+        return *this;
+    }
+
+    // MyTime++ -> 先赋值再加
+    MyTime operator++(int)
+    {
+        MyTime old = *this; // keep the old value
+        operator++();  // prefix increment
+        return old;
+    }
+};
+
+int main()
+{
+    MyTime t1(1, 20); // Constructor MyTime(int,int)
+    int minutes = t1; //implicit conversion   operator int()
+    float f = float(t1); //explicit conversion.  explicit operator float()
+    std::cout << "minutes = " << minutes << std::endl; // minutes = 80
+    std::cout << "minutes = " << f << std::endl; // minutes = 80
+
+    float f1 = t1; // operator int() 先转为int 再转为float 两次隐式类型转换
+    std::cout << "minutes = " << f << std::endl; // minutes = 80
+
+    MyTime t2 = 70; // Constructor MyTime(int)
+    std::cout << "t2 is " << t2 << std::endl; 
+
+    MyTime t3; // Constructor MyTime()
+    t3 = 80; // operator=(int)
+    std::cout << "t3 is " << t3 << std::endl;
+
+
+    MyTime t10(1, 59);
+    MyTime t20 = t10++; // 先赋值后加
+    MyTime t30 = ++t10; // 先加后赋值
+
+    std::cout << "t10 is " << t10 << std::endl; // t10 is 2 hours and 1 minutes.
+    std::cout << "t20 is " << t20 << std::endl; // t20 is 1 hours and 59 minutes.
+    std::cout << "t30 is " << t30 << std::endl; // t30 is 2 hours and 1 minutes.
+
+    return 0;
+
+}

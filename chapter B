@@ -1,0 +1,260 @@
+// 当没有明确写明 constructor/destructor/copy constructor/assignment 函数时，编译器会设置默认的函数
+// copy constructor/assignment -> copy all non-static variables
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class MyString
+{
+private:
+    int buf_len;
+    char* characters;
+public:
+
+    string getChar()
+    {
+        return this->characters;
+    }
+
+    MyString(int buf_len = 64, const char* data = NULL)
+    {
+        std::cout << "Constructor(int, char*)" << std::endl;
+        this->buf_len = 0;
+        this->characters = NULL;
+        create(buf_len, data);
+    }
+    ~MyString()
+    {
+        delete[]this->characters;
+    }
+    bool create(int buf_len, const char* data)
+    {
+        this->buf_len = buf_len;
+
+        if (this->buf_len != 0)
+        {
+            this->characters = new char[this->buf_len]{};
+            if (data)
+                strncpy(this->characters, data, this->buf_len);
+        }
+
+        return true;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const MyString& ms)
+    {
+        os << "buf_len = " << ms.buf_len;
+        os << ", characters = " << static_cast<void*>(ms.characters); // 内存地址
+        os << " [" << ms.characters << "]";
+        return os;
+    }
+};
+
+
+// Why memory leak and memory double free?
+int main()
+{
+    MyString str1(10, "Shenzhen");  // 初始化 调用构造函数 Constructor(int, char*)
+
+    cout << "str1: " << str1 << endl; // str1: buf_len = 10, characters = 0x746c70 [Shenzhen]
+
+    MyString str2 = str1; // 拷贝 调用默认的拷贝函数
+    cout << "str2: " << str2 << endl; // str2: buf_len = 10, characters = 0x746c70 [Shenzhen]
+
+    MyString str3; // Constructor(int, char*)
+    cout << "str3: " << str3 << endl; // str3: buf_len = 64, characters = 0x746c88 []
+    str3 = str1; // 赋值 调用默认的赋值函数
+    cout << "str3:" << str3 << endl; // str3:buf_len = 10, characters = 0x746c70 [Shenzhen]
+
+    // 注意，此时str3原来指向的地址0x746c88 已经无法找到并且释放了
+    return 0;
+    // 同时， 程序结束后会调用三个str的destructor, 释放data所指向的内存空间
+    // 而在第一次释放后，该内存无法再被找到并且释放，因此会报错
+}
+
+
+// hard copy 硬拷贝 每一个对象有自己的内存
+// 此时需要自定义拷贝函数 赋值函数 和析构函数
+
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+
+class MyString
+{
+private:
+    int buf_len;
+    char* characters;
+public:
+    MyString(int buf_len = 64, const char* data = NULL)
+    {
+        std::cout << "Constructor(int, char*)" << std::endl;
+        this->buf_len = 0;
+        this->characters = NULL;
+        create(buf_len, data);
+    }
+    MyString(const MyString& ms) // 自定义拷贝函数 
+    {
+        std::cout << "Constructor(MyString&)" << std::endl;
+        this->buf_len = 0;
+        this->characters = NULL;
+        create(ms.buf_len, ms.characters); // 用数据重新初始化，有不一样的内存地址
+    }
+    ~MyString()
+    {
+        release();
+    }
+    MyString& operator=(const MyString& ms) // 自定义赋值函数
+    {
+        create(ms.buf_len, ms.characters); // 用数据重新初始化，有不一样的内存地址
+        return *this;
+    }
+    bool create(int buf_len, const char* data)
+    {
+        release();
+
+        this->buf_len = buf_len;
+
+        if (this->buf_len != 0)
+        {
+            this->characters = new char[this->buf_len]{};
+        }
+        if (data)
+            strncpy(this->characters, data, this->buf_len);
+
+        return true;
+    }
+    bool release() // 之前为 delete[]this->characters;
+    {
+        this->buf_len = 0;
+        if (this->characters != NULL) // 释放之前检查是否有内存 如果没有则不再释放
+        {
+            delete[]this->characters;
+            this->characters = NULL;
+        }
+        return 0;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const MyString& ms)
+    {
+        os << "buf_len = " << ms.buf_len;
+        os << ", characters = " << static_cast<void*>(ms.characters);
+        os << " [" << ms.characters << "]";
+        return os;
+    }
+};
+
+int main()
+{
+    MyString str1(10, "Shenzhen"); // Constructor(int, char*)
+    cout << "str1: " << str1 << endl;  // str1: buf_len = 10, characters = 0xe96c70 [Shenzhen]
+
+    MyString str2 = str1; // Constructor(MyString&)
+    cout << "str2: " << str2 << endl; // str2: buf_len = 10, characters = 0xe96c88 [Shenzhen]
+
+    MyString str3; // Constructor(int, char*)
+    cout << "str3: " << str3 << endl; // str3: buf_len = 64, characters = 0xe96ca0 []
+    str3 = str1;
+    cout << "str3: " << str3 << endl; // str3: buf_len = 10, characters = 0xe96ca0 [Shenzhen]
+
+    return 0;
+}
+
+// smart pointers 在析构函数中会检查被引用的次数，如果为0则自动释放
+// shared_ptr共享指针不用手动释放内存
+// unique_ptr只能指向一个单位，也不需要手动释放内存
+#include <iostream>
+#include <memory>
+
+class MyTime
+{
+    int hours;
+    int minutes;
+public:
+    MyTime() : hours(0), minutes(0)
+    {
+        std::cout << "Constructor MyTime()" << std::endl;
+    }
+    MyTime(int m) : hours(0), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int)" << std::endl;
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+    }
+    MyTime(int h, int m) : hours(h), minutes(m)
+    {
+        std::cout << "Constructor MyTime(int,int)" << std::endl;
+        this->hours += this->minutes / 60;
+        this->minutes %= 60;
+    }
+    ~MyTime()
+    {
+        std::cout << "Destructor MyTime(). Bye!" << std::endl;
+    }
+    MyTime operator+(int m) const
+    {
+        MyTime sum;
+        sum.minutes = this->minutes + m;
+        sum.hours = this->hours;
+        sum.hours += sum.minutes / 60;
+        sum.minutes %= 60;
+        return sum;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const MyTime& t)
+    {
+        std::string str = std::to_string(t.hours) + " hours and "
+            + std::to_string(t.minutes) + " minutes.";
+        os << str;
+        return os;
+    }
+};
+
+
+int main()
+{
+    // std::shared_ptr<MyTime> mt0 = new MyTime(0,70); // shared_ptr不能像普通指针一样初始化
+    // MyTime * mt1 = std::make_shared<MyTime>(1, 70); // shared_ptr不能拷贝给普通指针
+    // {
+    //     std::shared_ptr<MyTime> mt1(new MyTime(10)); // 和第一行一样
+    //     std::cout << *mt1 << std::endl;
+    // }
+
+    {
+        std::shared_ptr<MyTime> mt1 = std::make_shared<MyTime>(1, 70);
+        std::shared_ptr<MyTime> mt2 = mt1;
+        std::shared_ptr<MyTime> mt3 = mt2;
+
+        std::cout << "mt1: " << *mt1 << std::endl;
+        std::cout << "mt2: " << *mt2 << std::endl;
+        std::cout << "mt3: " << *mt3 << std::endl; // mt3: 2 hours and 10 minutes.
+        std::cout << "use_count() = " << mt2.use_count() << std::endl; // 3次引用
+
+        {
+            auto mt4 = mt3;
+            *mt4 = *mt4 + 50; //  mt3所指向的数据已经被更改 
+            std::cout << "use_count() = " << mt3.use_count() << std::endl; // 4次引用
+        }
+        std::cout << "mt3: " << *mt3 << std::endl; //mt3: 3 hours and 0 minutes.
+        std::cout << "use_count() = " << mt3.use_count() << std::endl; // 3次引用 mt4已经被销毁
+
+
+        std::unique_ptr<MyTime> mt4(new MyTime(10));
+        std::unique_ptr<MyTime> mt5 = std::make_unique<MyTime>(80); //c++17
+
+        std::cout << "mt4: " << *mt4 << std::endl; // mt4: 0 hours and 10 minutes.
+        std::cout << "mt5: " << *mt5 << std::endl;
+
+        // std::unique_ptr<MyTime> mt6 = mt4; // 拷贝必须用move
+        std::unique_ptr<MyTime> mt6 = std::move(mt4);
+        // std::shared_ptr<MyTime> mt6 = std::move(mt4);// unique_ptr可以赋值给shared_ptr
+
+        std::cout << "mt6: " << *mt6 << std::endl; // mt6: 0 hours and 10 minutes.
+        std::cout << "mt4: " <<*mt4 << std::endl; // mt4: 此时mt4已经被释放 无法再打印信息
+
+
+        return 0;
+    }
+
+    return 0;
+}

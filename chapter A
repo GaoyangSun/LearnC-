@@ -204,15 +204,16 @@ public:
             + std::to_string(this->minutes) + " minutes.";
     }
 
-    // cout << t1.getTime()<< endl;  ->  cout << t1 <<endl;
-    // 注意 << 也是个运算符，如果需要重载，要在cout (std::ostream)中修改，而std是标准类，此时可以通过friend来修改
-
-    friend std::ostream& operator<<(std::ostream& os, const MyTime& t)
+    // cout << t1.getTime() (<< endl);  ->  cout << t1 (<<endl);
+    // 注意 << 也是个binary运算符，如果对<<重载，需要在std::ostream中的cout进行修改，而std是标准类，此时可以通过friend来修改
+    // 下式中的os可以直接理解为cout
+    // 注意，cout；是可以直接运行的，所以cout<<t1; -> 在print之后返回cout，等同于 print(t1); cout; 这是没有问题的。
+    friend std::ostream& operator<<(std::ostream& os, const MyTime& t) // lhs（os） -> cout/cin/...等等这一类std::ostream中的东西
     {
         std::string str = std::to_string(t.hours) + " hours and "
             + std::to_string(t.minutes) + " minutes.";
-        os << str; // 将上述字符串输入到os 
-        return os;
+        os << str; // 此时，已经开始print东西了
+        return os; // 在print完成之后，再返回一个cout，方便和后面的 << endl; 或其他东西连接
     }
     friend std::istream& operator>>(std::istream& is, MyTime& t) // 输入流也是如此
 
@@ -314,7 +315,7 @@ public:
     {
         std::string str = std::to_string(t.hours) + " hours and "
             + std::to_string(t.minutes) + " minutes.";
-        os << str;
+        os << str; 
         return os;
     }
 };

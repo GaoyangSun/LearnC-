@@ -1,0 +1,150 @@
+// public成员 -> 可以任意访问
+// protected成员 -> 只能在本类及子类中访问
+// private成员 -> 只能在本类中访问
+// public inheritance -> 不改变三类成员限制
+// protected inheritance -> public成员改为protected成员
+// private inheritance -> 所有成员变为private，子类不可访问
+
+#include <iostream>
+using namespace std;
+
+class Base
+{
+public:
+    int a;
+    int b;
+    Base(int a = 0, int b = 0)
+    {
+        this->a = a;
+        this->b = b;
+        cout << "Constructor Base::Base(" << a << ", " << b << ")" << endl;
+    }
+    ~Base()
+    {
+        cout << "Destructor Base::~Base()" << endl; // 没有动态变量 无需手动释放内存
+    }
+    int product()
+    {
+        return a * b;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Base& obj)
+    {
+        os << "Base: a = " << obj.a << ", b = " << obj.b;
+        return os;
+    }
+};
+
+class Derived : public Base
+{
+public:
+    int c;
+    Derived(int c) : Base(c - 2, c - 1), c(c)
+    {
+        this->a += 3; // 只更改子类中的值
+        cout << "Constructor Derived::Derived(" << c << ")" << endl;
+    }
+    ~Derived()
+    {
+        cout << "Destructor Derived::~Derived()" << endl;
+    }
+    int product()
+    {
+        return Base::product() * c; // 子类可以直接调用父类中的函数
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Derived& obj)
+    {
+        // call the friend function in Base class
+        os << static_cast<const Base&>(obj) << endl; // 强制类型转换，将子类Derived转换为父类Base
+
+        os << "Derived: c = " << obj.c;
+        return os;
+    }
+};
+
+int main()
+{
+    
+    Base base(1, 2);
+    cout << base << endl;
+    
+    cout << "----------------------" << endl;
+    {
+        Derived derived(5); 
+        cout << derived << endl; // a = 6, b = 4  c = 5
+        cout << base << endl;  // a = 1, b= 2
+        cout << "Product = " << derived.product() << endl;
+    }
+    return 0;
+}
+
+// virtual关键字使函数的绑定方式由static（编译器决定调用哪个函数）转为dynamic（运行时再决定）
+// 当子类和父类有相同的成员函数名时，添加在父类函数前virtual关键字，可以让子类调用该函数时使用子类的成员函数
+// 需要明确使用各类的成员函数时，可以使用var.base::func/ var.child::func
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Person
+{
+public:
+    string name;
+    Person(string n) : name(n) {}
+    virtual void print()
+    {
+        cout << "Name: " << name << endl;
+    }
+};
+
+class Person2
+{
+public:
+    string name;
+    Person2(string n) : name(n) {}
+    virtual void print() = 0;
+};
+
+class Student : public Person
+{
+public:
+    string id;
+    Student(string n, string i) : Person(n), id(i) {}
+    void print()
+    {
+        cout << "Name: " << name;
+        cout << ". ID: " << id << endl;
+    }
+};
+
+void printObjectInfo(Person& p) // 接收的是Person父类，如果不加virtual，则会打印父类的成员变量
+{
+    p.print();
+}
+
+int main()
+{
+    {
+        Student stu("yu", "2019");
+        printObjectInfo(stu); // Name: yu. ID: 2019
+    }
+
+    {
+        Person* p = new Student("xue", "2020");
+        p->print(); // Name: xue. ID: 2020
+        delete p; //if its destructor is not virtual
+    }
+
+     { //if you want to call a function in the base class
+         Student stu("li", "2021");
+         stu.Person::print(); // Name: li
+         stu.Student::print(); // Name: li. ID: 2021
+         stu.print(); // 调用自己的print函数 Name: li. ID: 2021
+
+
+         Person * p = new Student("xue", "2020");
+         p->Person::print();  // Name: xue
+         p->print(); // Name: xue. ID: 2020
+         delete p; 
+    }
+
+    return 0;
+}

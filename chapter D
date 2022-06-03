@@ -1,0 +1,299 @@
+// class template使class不局限于特定的数据类型，在运行时再决定数据类型
+
+#include <iostream>
+using namespace std;
+
+// Class Template
+template<typename T>
+class Mat
+{
+    size_t rows;
+    size_t cols;
+    T* data;
+public:
+    Mat(size_t rows, size_t cols) : rows(rows), cols(cols)
+    {
+        data = new T[rows * cols * sizeof(T)]{}; // 申请内存
+    }
+    ~Mat()
+    {
+        delete[] data;
+    }
+    Mat(const Mat&) = delete; // 不使用默认的构造函数，避免内存管理问题
+    Mat& operator=(const Mat&) = delete;  // 不使用默认的赋值函数，避免内存管理问题
+    T getElement(size_t r, size_t c);
+    bool setElement(size_t r, size_t c, T value);
+};
+
+template <typename T>
+T Mat<T>::getElement(size_t r, size_t c)
+{
+    if (r >= this->rows || c >= this->cols)
+    {
+        cerr << "getElement(): Indices are out of range" << endl;
+        return 0;
+    }
+    return data[this->cols * r + c];
+}
+template <typename T>
+bool Mat<T>::setElement(size_t r, size_t c, T value)
+{
+    if (r >= this->rows || c >= this->cols)
+    {
+        cerr << "setElement(): Indices are out of range" << endl;
+        return false;
+    }
+
+    data[this->cols * r + c] = value;
+    return true;
+}
+
+template class Mat<int>; // 显式初始化mat类
+
+//template Mat<float> and Mat<double> will be instantiate implicitly
+int main()
+{
+    Mat<int> imat(3, 4);
+    imat.setElement(1, 2, 256);
+    Mat<float> fmat(2, 3); // 隐式初始化mat类
+    fmat.setElement(1, 2, 3.14159f);
+    Mat<double> dmat(2, 3);
+    dmat.setElement(1, 2, 2.718281828);
+
+    // Mat<float> fmat2(fmat); // 由于不使用默认构造函数，此处报错
+
+    // Mat<float> fmat3(2,3);
+    // fmat3 = fmat; // 由于不使用默认赋值函数，此处报错
+
+    cout << imat.getElement(1, 2) << endl;
+    cout << fmat.getElement(1, 2) << endl;
+    cout << dmat.getElement(1, 2) << endl;
+
+    return 0;
+}
+
+
+// 由于Mat的静态成员变量rows/cols在编译时已经确定，因此data不再是动态申请，而是静态数据
+// 因此构造函数无需动态申请，析构函数也无需释放内存，copy/assignment constructor也无需删除
+#include <iostream>
+using namespace std;
+
+// Class Template
+template<typename T, size_t rows, size_t cols> // 把函数的静态成员变量也放到template中
+class Mat
+{
+    T data[rows][cols];
+public:
+    Mat() {} 
+    T getElement(size_t r, size_t c);
+    bool setElement(size_t r, size_t c, T value);
+};
+template<typename T, size_t rows, size_t cols>
+T Mat<T, rows, cols>::getElement(size_t r, size_t c)
+{
+    if (r >= rows || c >= cols) // 之前为this->rows，此时rows等同于常量
+    {
+        cerr << "getElement(): indices are out of range" << endl;
+        return 0;
+    }
+    return data[r][c];
+}
+template<typename T, size_t rows, size_t cols>
+bool Mat<T, rows, cols>::setElement(size_t r, size_t c, T value)
+{
+    if (r >= rows || c >= cols)
+    {
+        cerr << "setElement(): Indices are out of range" << endl;
+        return false;
+    }
+
+    data[r][c] = value;
+    return true;
+}
+
+template class Mat<int, 2, 2>; // 编译时mat已确定，显式初始化 template Mat<int, 2, 2>
+typedef Mat<int, 2, 2> Mat22i;
+
+//template Mat<float, 3, 1> will be instantiate implicitly
+
+int main()
+{
+    Mat22i mat;
+
+    mat.setElement(2, 3, 256);   // setElement(): Indices are out of range
+    cout << mat.getElement(2, 3) << endl;   // getElement(): Indices are out of range 0
+
+    mat.setElement(1, 1, 256);
+    cout << mat.getElement(1, 1) << endl; // 256
+
+    Mat<float, 3, 1> vec;
+    vec.setElement(2, 0, 3.14159f);
+    cout << vec.getElement(2, 0) << endl; // 3.14159
+
+    Mat<float, 3, 1> vec2(vec); // 调用拷贝函数
+    cout << vec2.getElement(2, 0) << endl; // 3.14159
+
+    // vec2 = mat; // 无法赋值，mat和vec2类型不匹配
+
+    return 0;
+}
+
+// 对特定类型的特例化（specialization）
+// bool类型只占一个bit，而一般为了方便，会被分配1个byte，因此可以对此进行特例化处理
+
+#include <iostream>
+using namespace std;
+
+// Class Template
+template<typename T>
+class MyVector
+{
+    size_t length;
+    T* data;
+public:
+    MyVector(size_t length) : length(length)
+    {
+        data = new T[length * sizeof(T)]{};
+    }
+    ~MyVector()
+    {
+        delete[] data;
+    }
+    MyVector(const MyVector&) = delete;
+    MyVector& operator=(const MyVector&) = delete;
+    T getElement(size_t index);
+    bool setElement(size_t index, T value);
+};
+template <typename T>
+T MyVector<T>::getElement(size_t index)
+{
+    if (index >= this->length)
+    {
+        cerr << "getElement(): Indices are out of range" << endl;
+        return 0;
+    }
+    return data[index];
+}
+template <typename T>
+bool MyVector<T>::setElement(size_t index, T value)
+{
+    if (index >= this->length)
+    {
+        cerr << "setElement(): Indices are out of range" << endl;
+        return false;
+    }
+
+    data[index] = value;
+    return true;
+}
+
+template class MyVector<int>; // Explicitly instantiate template Mat<int>
+
+// 类的特例化
+template<>
+class MyVector<bool>
+{
+    size_t length;
+    unsigned char* data;
+public:
+    MyVector(size_t length) : length(length)
+    {
+        int num_bytes = (length - 1) / 8 + 1;
+        data = new unsigned char[num_bytes] {};
+    }
+    ~MyVector()
+    {
+        delete[] data;
+    }
+    MyVector(const MyVector&) = delete;
+    MyVector& operator=(const MyVector&) = delete;
+    bool getElement(size_t index);
+    bool setElement(size_t index, bool value);
+};
+bool MyVector<bool>::getElement(size_t index)
+{
+    if (index >= this->length)
+    {
+        cerr << "getElement(): Indices are out of range" << endl;
+        return 0;
+    }
+    size_t byte_id = index / 8;
+    size_t bit_id = index % 8;
+    unsigned char mask = (1 << bit_id);
+    return bool(data[byte_id] & mask);
+}
+bool MyVector<bool>::setElement(size_t index, bool value)
+{
+    if (index >= this->length)
+    {
+        cerr << "setElement(): Indices are out of range" << endl;
+        return false;
+    }
+
+    size_t byte_id = index / 8;
+    size_t bit_id = index % 8;
+    unsigned char mask = (1 << bit_id);
+
+    if (value)
+        data[byte_id] |= mask;
+    else
+        data[byte_id] &= ~mask;
+
+    return true;
+}
+
+int main()
+{
+    MyVector<int> vec(16); // 实例化的类
+    vec.setElement(3, 256);
+    cout << vec.getElement(3) << endl; // 256
+
+    MyVector<bool> boolvec(17); // 特例化的类
+    boolvec.setElement(15, false);
+    boolvec.setElement(16, true);
+
+    cout << boolvec.getElement(15) << endl; // 0 
+    cout << boolvec.getElement(16) << endl; // 1
+    return 0;
+}
+
+// 标准类
+
+// std::array
+template<
+	class T,
+	std::size_t N
+> struct array;
+
+// vector
+template<
+	class T,
+	class Allocator = std::allocator<T>
+> class vector;
+
+// list
+template<
+	class T,
+	class Allocator = std::allocator<T>
+>class list;
+
+// set
+template<
+	class Key,
+	class Compare = std::less<Key>,
+	class Allocator = std::allocator<Key>
+> class set;
+
+// map
+template<
+	class Key,
+	class T,
+	class Compare = std::less<Key>,
+	class Allocator = std::allocator<std::pair<const Key, T>>
+>class map;
+
+// stack
+template<
+	class T,
+	class Container = std::deque<T>
+> class stack;

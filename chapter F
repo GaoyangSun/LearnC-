@@ -1,0 +1,262 @@
+// friend class可以访问class的任何成员变量， friend class本身可以使private/protected/public
+#include <iostream>
+using namespace std;
+
+class Sniper
+{
+private:
+    int bullets;
+public:
+    Sniper(int bullets = 0) : bullets(bullets) {}
+    friend class Supplier;
+};
+
+class Supplier
+{
+    int storage;
+public:
+    Supplier(int storage = 1000) : storage(storage) {}
+    bool provide(Sniper& sniper)
+    {
+        // bullets is a private member
+        if (sniper.bullets < 20) // 可以在Supplier类里面直接访问Sniper的私有变量
+        {
+            if (this->storage > 100)
+            {
+                sniper.bullets += 100;
+                this->storage -= 100;
+            }
+            else if (this->storage > 0)
+            {
+                sniper.bullets += this->storage;
+                this->storage = 0;
+            }
+            else
+                return false;
+        }
+        cout << "sniper has " << sniper.bullets << " bullets now." << endl;
+        return true;
+    }
+};
+
+int main()
+{
+    Sniper sniper(2);
+    Supplier supplier(2000);
+    supplier.provide(sniper);
+    return 0;
+}
+
+// friend member function 把friend的范围限定到另外class的某一个函数
+// 注意，friend member function不是friend function，后者不是class的成员
+// 容易出现锁死，注意函数所需的先后关系
+
+#include <iostream>
+using namespace std;
+
+class Supplier; // 声明该函数，防止锁死
+class Sniper; // 声明该函数，防止锁死
+
+
+
+class Supplier
+{
+    int storage;
+public:
+    Supplier(int storage = 1000) : storage(storage) {}
+    bool provide(Sniper& sniper); // 此处只需要前面有类的声明即可
+};
+
+class Sniper
+{
+private:
+    int bullets;
+public:
+    Sniper(int bullets = 0) : bullets(bullets) {}
+    friend bool Supplier::provide(Sniper&); // 此处需要前面有Supplier::provide的声明
+};
+
+bool Supplier::provide(Sniper& sniper) // 把该函数放到外面定义
+{
+    // bullets is a private member
+    if (sniper.bullets < 20) //no enough bullets
+    {
+        if (this->storage > 100)
+        {
+            sniper.bullets += 100;
+            this->storage -= 100;
+        }
+        else if (this->storage > 0)
+        {
+            sniper.bullets += this->storage;
+            this->storage = 0;
+        }
+        else
+            return false;
+    }
+    cout << "sniper has " << sniper.bullets << " bullets now." << endl;
+    return true;
+}
+int main()
+{
+    Sniper sniper(2);
+    Supplier supplier(2000);
+    supplier.provide(sniper);
+    return 0;
+}
+
+
+// 内部枚举类型，如果一个枚举只在类的内部使用，可以放到其成员变量中
+#include <iostream>
+
+class Mat
+{
+public:
+    enum DataType // 如果只有Mat类在用，可以放到Mat类里面
+    {
+        TYPE8U,
+        TYPE8S,
+        TYPE32F,
+        TYPE64F
+    };
+private:
+    DataType type;
+    void* data;
+public:
+    Mat(DataType type) : type(type), data(NULL) {}
+
+    DataType getType() const { return type; }
+};
+
+int main()
+{
+    Mat image(Mat::DataType::TYPE8U);
+
+    if (image.getType() == Mat::DataType::TYPE8U)
+        std::cout << "This is an 8U matrix." << std::endl;
+    else
+        std::cout << "I am not an 8U matrix." << std::endl;
+
+    return 0;
+}
+
+// 如果一个class只有另外一个class在使用，那么可以把他放到另一个class的内部
+#include <iostream>
+using namespace std;
+class Storage
+{
+public:
+    class Fruit
+    {
+        string name;
+        int weight;
+    public:
+        Fruit(string name = "", int weight = 0) :name(name), weight(weight) {}
+        string getInfo() { return name + ", weight " + std::to_string(weight) + "kg."; }
+    };
+private:
+    Fruit fruit;
+public:
+    Storage(Fruit f)
+    {
+        this->fruit = f;
+    }
+    void print()
+    {
+        cout << fruit.getInfo() << endl;
+    }
+
+};
+
+int main()
+{
+    Storage::Fruit apple("apple", 100);
+    Storage mystorage(apple);
+    mystorage.print(); // apple, weight 100kg.
+    return 0;
+}
+
+
+// rtti runtime type identification
+// dynamic_cast -> 多态（virtual）类型转换
+#include <iostream>
+using namespace std;
+
+class Person
+{
+protected:
+    string name;
+public:
+    Person(string name = "") :name(name) {};
+    virtual ~Person() {} // virtual让person为多态，否则其子类无法转换为父类
+    string getInfo() { return name; }
+};
+
+class Student : public Person
+{
+    string studentid;
+public:
+    Student(string name = "", string sid = "") :Person(name), studentid(sid) {};
+    string getInfo() { return name + ":" + studentid; }
+};
+
+int main()
+{
+    Person person("Yu");
+    Student student("Sam", "20210212");
+    Person* pp = &student; // 子类指针
+    Person& rp = student; // 子类引用
+    Student* ps = (Student*)&person; // 用子类指针指向转换为子类指针的父类引用
+    cout << ps->getInfo() << endl; // Yu:Yu  -> 这里第二个Yu是指到其他地方了（指针越界），ps没有初始化studentid
+
+    ps = dynamic_cast<Student*>(&person);
+    printf("address = %p\n", ps); // address = 00000000 -> 父类转子类，dynamic_cast无法转换，指针无效
+    pp = dynamic_cast<Person*>(&student);
+    printf("address = %p\n", pp); // address = 0061FE48 -> 子类转父类，dyamic_cast可以转化，指针有效
+    return 0;
+}
+
+// const_cast 用于const变量的转换
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int value1 = 100;
+    const int value2 = 200;
+
+    int* pv1 = const_cast<int*>(&value1);
+    int* pv2 = const_cast<int*>(&value2);
+
+    (*pv1)++;
+    (*pv2)++;
+
+    cout << "value1 = " << value1 << endl; // 101
+    cout << "value2 = " << value2 << endl; // 200 通过指针无法修改
+
+    int& v2 = const_cast<int&>(value2);
+    v2++;
+    cout << "value2 = " << value2 << endl; // 200 通过引用无法修改
+
+    cout << "*pv2 = " << (*pv2) << endl; // 202
+    cout << "v2 = " << v2 << endl; // 202
+
+    return 0;
+}
+
+
+// reinterpret_cast 通过bit的解读方式在数据类型之间转换
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int i = 18;
+    float* p1 = reinterpret_cast<float*>(i); // static_cast will fail
+    int* p2 = reinterpret_cast<int*>(p1);
+
+    printf("p1=%p\n", p1); // p1=0x12
+    printf("p2=%p\n", p2); // p2=0x12
+
+    return 0;
+}

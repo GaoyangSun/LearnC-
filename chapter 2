@@ -47,7 +47,11 @@ int main()
 56789 xexp 2 -> 3224990521 （within (2^31-1, 2^32-1)) -> 11000000001110010111001100111001 -> 这个32位的数第一位为1，即负数 -> -1077506873
 所以要用unsigned int,这样32位全是数字，没有符号，就可以计算
 如果32过多或过少，可以使用 long long (64) short int (16)
-
+int8的取值范围 第一位是sign bit， 后面7位是num bit
+当第一位是1，后面全是0 -> 0
+当第一位是0，后面全是0 -> -0
+最大数为8位全是1 -> 1111 1111 -> + 111 1111 -> +127
+0有1个即可，因此把-0，即 0000 0000规定为最小数，-128
 
 
 char是8位整数，+c1做强制类型转换
@@ -266,3 +270,24 @@ int main()
 	cout << "c= " << c << endl; //5
 	return 0;
 }
+
+#include <iostream>
+
+using namespace std;
+
+int main(int argc, char const* argv[])
+{
+	unsigned int a = -1;
+	printf("%d\n", a); // -1
+	printf("%u\n", a); // 4294967295
+	int MAX = a >> 1; // 算术右移
+	int MIN = MAX + 1;
+	int c = MIN - 1;
+	int d = MAX + 1;
+	printf("[%d, %d]\n", MIN, MAX); // [-2147483648, 2147483647]
+	printf("[%d, %d]\n", c, d); // [-2147483648, 2147483647]
+	return 0;
+}
+min -1 = max
+unsigned int 最小值为0， a=0-1 -> max 32位全是1
+a >> 1 右移一位，第一位是0，后面全是1，为signed int32位最大

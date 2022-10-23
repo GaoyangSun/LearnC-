@@ -113,7 +113,7 @@ int main()
 	int rows = 5;
 	int cols = 4;
 
-	float mat2[rows][4]; // 这个地方不能写cols，只能写4（我不知道为啥）
+	float mat2[rows][4]; // 这个地方不能写cols，只能写4（我不知道为啥） // 可以在定义cols时写成 const int cols = 4; 这样就可以运行 float mat2[rows][cols];
 
 	init_2d_array(mat2, rows, cols);
 

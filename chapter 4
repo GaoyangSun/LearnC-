@@ -341,11 +341,15 @@ int main()
 	cout << +ip.address8[2] << ".";
 	cout << +ip.address8[3] << endl;
 
+	cout << "ip.address32: " << ip.address32 << endl; // 16777343
+
 	cout << std::hex;
 	cout << "in hex " << ip.address32 << endl; // 100007f little-endian 127（7f）在末尾
 
 	return 0;
 }
+
+
 
 // enum 相当于一个const array 每一个元素都是其对应位置的整数
 #include <iostream>
@@ -432,7 +436,6 @@ int main()
 	return 0;
 }
 
-
 #include <iostream>
 using namespace std;
 
@@ -452,17 +455,19 @@ int main()
 	//unsigned char color[3] = {255, 0, 255};
 	vec3b color = { 255, 0, 255 };
 	cout << hex;
-	cout << "R=" << +color[0] << ", ";
-	cout << "G=" << +color[1] << ", ";
-	cout << "B=" << +color[2] << endl;
+	cout << "R=" << +color[0] << ", "; // ff
+	cout << "G=" << +color[1] << ", "; // 0
+	cout << "B=" << +color[2] << endl; // ff
 
 	rgb_struct rgb = { 0, 255, 128 };
-	cout << "R=" << +rgb.r << ", ";
-	cout << "G=" << +rgb.g << ", ";
-	cout << "B=" << +rgb.b << endl;
+	cout << "R=" << +rgb.r << ", "; // 0
+	cout << "G=" << +rgb.g << ", "; // ff
+	cout << "B=" << +rgb.b << endl; // 80
 
-	cout << sizeof(rgb.r) << endl;
-	cout << sizeof(+rgb.r) << endl; //why 4?
+	cout << sizeof(unsigned char) << endl;  // 4
+	cout << sizeof(int) << endl; // 1
+	cout << rgb.r << " " << sizeof(rgb.r) << endl;  // rgb.r 是unsigned char，长度是1个字节 范围是0-255
+	cout << +rgb.r << " " << sizeof(+rgb.r) << endl; //why 4? -> // int 本身是4个字节
 
 	return 0;
 }

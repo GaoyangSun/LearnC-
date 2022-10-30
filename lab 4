@@ -1,0 +1,85 @@
+// array
+
+#include <iostream>
+using namespace std;
+
+int main() {
+	int num_array1[5] = { 1 };
+	int num_array2[5] = { 1,2,3,4,5 };
+	int num_array3[5] = {};
+	int num_array4[0] = {};
+
+	int* pointer3 = num_array3;
+	int* pointer4 = num_array4;
+
+	cout << sizeof(num_array1) << endl; // 20
+	cout << sizeof(num_array1[0]) << endl; // 4
+	cout << (int) sizeof(num_array1) / sizeof(num_array1[0]) << endl; // 5
+	
+	cout << num_array2 << endl; // 0x61fee8
+	cout << &num_array2 << endl; // 0x61fee8
+	cout << &num_array2[0] << endl; // 0x61fee8
+	cout << &num_array2[4] << endl; // 0x61fef8  = 0x61fee8 + 16
+
+	cout << num_array1 << endl; // 0x61fefc
+	cout << num_array1[4] << endl; // 0 -> 没有被分配地址
+
+	cout << num_array3 << endl; // 0x61fed4
+	cout << num_array3[4] << endl; // 0
+	cout << &num_array3[4] << endl; // 0x61fed4 = 0x61fed4 + 16
+
+
+	cout << &num_array4 << endl; // 0x61fed4  由于num_array4没有长度，因此没有被分配内存地址，而是和num_array3共享地址
+	cout << num_array4[0] << endl; // 0  尽管没有被赋值，num_array4所在地址的值也是num_array3首地址的值
+
+	cout << pointer3 << endl; // 0x61fed4
+	cout << pointer4 << endl; // 0x61fed4
+	cout << *pointer3 << endl; // 0
+	cout << *pointer4 << endl; // 0
+
+	for (int i = -1; i < 6; i++) { // array边界外的数值也可以被更改
+		num_array3[i] = 1;
+	};
+
+	num_array4[0] = 1; // 尽管没有被分配地址，但仍然可以修改共享地址处的值
+
+	cout << num_array4 << endl; // 0x61fed4
+	cout << num_array4[0] << endl; // 1
+
+	cout << num_array3[0] << endl; // 1  num_array3首地址的值也一同被修改
+	cout << pointer3 << endl; // 0x61fed4
+	cout << pointer4 << endl; // 0x61fed4
+	cout << *pointer3 << endl; // 1
+	cout << *pointer4 << endl; // 1
+  
+	return 0;
+}
+
+// strings in the form of char array
+
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+
+int size_char(char array[]) {
+	return (int) sizeof(array) / sizeof(array[0]);
+};
+
+template <class T>
+int getArrayLen(T& array)
+{
+	return sizeof(array) / sizeof(array[0]);
+}
+
+
+int main()
+{
+	char name[] = "abcde"; 
+	cout << strlen(name) << endl; // 5
+	cout << name[6] << endl; //  空值 即"\0"
+	cout << sizeof(name) << endl; // 6
+	cout << size_char(name) << endl; // 4 -> size of char*
+	cout << getArrayLen(name) << endl; // 6
+}
+

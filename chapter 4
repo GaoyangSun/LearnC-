@@ -161,7 +161,13 @@ int main()
 
 
 #include <iostream>
+#include <cstring>
 using namespace std;
+
+template <class T>
+int size(T& array) {
+	return sizeof(array) / sizeof(array[0]);
+};
 
 int main()
 {
@@ -205,13 +211,15 @@ int main()
 	cout << "result= " << result << endl;
 	strcat(result, str2); // 连接 strcat(dest, src)
 	cout << "result= " << result << endl;
-	cout << "len(result)" << result.length() << endl;
+	cout << "len(result)" << strlen(result) << endl;
 
 	cout << "strcmp() = " << strcmp(str1, str2) << endl; //比较str1和str2的大小
 
 	return 0;
 }
 
+// strlen 用于char array式的string
+// str1.length() 用于std::string
 
 #include <iostream>
 #include <string>
